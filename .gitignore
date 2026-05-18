@@ -1,0 +1,41 @@
+# Gradle
+.gradle/
+build/
+**/build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# Local configuration
+local.properties
+*.local.properties
+
+# Android Studio / IntelliJ
+.idea/
+*.iws
+*.iml
+*.ipr
+captures/
+.externalNativeBuild/
+.cxx/
+
+# Kotlin/Native
+*.klib
+
+# Generated files
+gen/
+generated/
+
+# Keystore / signing
+*.jks
+*.keystore
+*.p12
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment / secrets
+.env
+secrets.properties
+
+# Logs
+*.log
