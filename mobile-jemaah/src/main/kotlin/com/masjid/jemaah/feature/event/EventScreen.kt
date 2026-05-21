@@ -74,8 +74,11 @@ fun EventScreen(
                                     Column(modifier = Modifier.padding(16.dp)) {
                                         Text(event.title, style = MaterialTheme.typography.titleMedium)
                                         Spacer(modifier = Modifier.height(8.dp))
+                                        val formattedDate = remember(event.date) {
+                                            com.masjid.jemaah.utils.DateUtils.formatToHumanReadable(event.date)
+                                        }
                                         Text(
-                                            "${event.date} • ${event.startTime} - ${event.endTime}",
+                                            "$formattedDate • ${event.startTime} - ${event.endTime}",
                                             style = MaterialTheme.typography.labelMedium,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )

@@ -140,8 +140,11 @@ fun KasScreen(
                                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                                 )
                                             }
+                                            val formattedDate = remember(tx.createdAt) {
+                                                com.masjid.jemaah.utils.DateUtils.formatToHumanReadable(tx.createdAt)
+                                            }
                                             Text(
-                                                tx.createdAt,
+                                                formattedDate,
                                                 style = MaterialTheme.typography.labelSmall,
                                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                                             )

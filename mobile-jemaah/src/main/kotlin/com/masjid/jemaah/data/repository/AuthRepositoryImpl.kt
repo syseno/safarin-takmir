@@ -18,7 +18,7 @@ class AuthRepositoryImpl @Inject constructor(
             val response = authApiClient.login(LoginRequest(email, password))
 
             if (RoleGuard.isAllowed(response.user.role)) {
-                tokenManager.saveToken(response.accessToken)
+                tokenManager.saveToken(response.token)
                 tokenManager.saveUserRole(response.user.role)
                 response.user
             } else {

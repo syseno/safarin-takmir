@@ -16,17 +16,20 @@ kotlin {
     sourceSets {
         val commonMain by getting {
             dependencies {
-                implementation(libs.ktor.client.core)
-                implementation(libs.ktor.client.content.negotiation)
-                implementation(libs.ktor.serialization.kotlinx.json)
-                implementation(libs.ktor.client.logging)
-                implementation(libs.ktor.client.auth)
+                // api() instead of implementation() so Ktor types are visible
+                // to KSP in consumer modules (mobile-takmir, mobile-jemaah)
+                api(libs.ktor.client.core)
+                api(libs.ktor.client.content.negotiation)
+                api(libs.ktor.serialization.kotlinx.json)
+                api(libs.ktor.client.logging)
+                api(libs.ktor.client.auth)
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
             }
         }
         val androidMain by getting {
             dependencies {
-                implementation(libs.ktor.client.android)
+                // api() so Android engine type is visible to KSP in app modules
+                api(libs.ktor.client.android)
             }
         }
     }

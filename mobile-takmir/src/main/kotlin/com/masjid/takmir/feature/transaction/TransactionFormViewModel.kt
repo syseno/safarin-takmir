@@ -77,9 +77,9 @@ class TransactionFormViewModel @Inject constructor(
             val desc = description.ifBlank { null }
 
             val result = if (financeId == null) {
-                createFinanceUseCase(masjidId, CreateFinanceRequest(title, amount, type, desc))
+                createFinanceUseCase(masjidId, CreateFinanceRequest(title, amount.toDouble(), type, description))
             } else {
-                updateFinanceUseCase(masjidId, financeId, UpdateFinanceRequest(title, amount, type, desc))
+                updateFinanceUseCase(masjidId, financeId, UpdateFinanceRequest(title, amount.toDouble(), type, desc))
             }
 
             when (result) {

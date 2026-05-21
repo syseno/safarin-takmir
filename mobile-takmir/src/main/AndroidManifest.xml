@@ -7,7 +7,7 @@
     <application
         android:name=".TakmirApp"
         android:allowBackup="false"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@drawable/ic_launcher"
         android:label="Takmir"
         android:supportsRtl="true"
         android:theme="@style/Theme.MasjidTakmir"

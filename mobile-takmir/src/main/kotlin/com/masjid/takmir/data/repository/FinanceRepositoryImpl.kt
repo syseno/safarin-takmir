@@ -40,11 +40,7 @@ class FinanceRepositoryImpl @Inject constructor(
         financeId: String,
         request: UpdateFinanceRequest
     ): AppResult<Finance> {
-        return AppResult.runCatching {
-            val finance = apiClient.updateFinance(masjidId, financeId, request)
-            transactionDao.insert(finance.toEntity(masjidId))
-            finance
-        }
+        return AppResult.Error("Pembaruan transaksi tidak didukung. Silakan hapus dan buat transaksi baru.")
     }
 
     override suspend fun deleteFinance(masjidId: String, financeId: String): AppResult<Unit> {
@@ -58,7 +54,7 @@ class FinanceRepositoryImpl @Inject constructor(
     private fun Finance.toEntity(masjidId: String) = TransactionEntity(
         id = id,
         title = title,
-        amount = amount,
+        amount = amount.toLong(),
         type = type,
         description = description,
         createdAt = createdAt,
