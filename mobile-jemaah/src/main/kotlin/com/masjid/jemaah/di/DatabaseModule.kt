@@ -5,6 +5,7 @@ import androidx.room.Room
 import com.masjid.jemaah.data.local.EventDao
 import com.masjid.jemaah.data.local.JemaahDatabase
 import com.masjid.jemaah.data.local.MasjidDao
+import com.masjid.jemaah.data.local.PrayerDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -23,7 +24,9 @@ object DatabaseModule {
             context,
             JemaahDatabase::class.java,
             "jemaah_database"
-        ).build()
+        )
+            .fallbackToDestructiveMigration()
+            .build()
     }
 
     @Provides
@@ -36,5 +39,11 @@ object DatabaseModule {
     @Singleton
     fun provideEventDao(database: JemaahDatabase): EventDao {
         return database.eventDao()
+    }
+
+    @Provides
+    @Singleton
+    fun providePrayerDao(database: JemaahDatabase): PrayerDao {
+        return database.prayerDao()
     }
 }

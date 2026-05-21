@@ -1,5 +1,7 @@
 package com.masjid.jemaah.di
 
+import android.content.Context
+import android.hardware.SensorManager
 import com.masjid.core.env.DevEnvConfig
 import com.masjid.core.env.EnvConfig
 import com.masjid.core.env.ProdEnvConfig
@@ -8,6 +10,7 @@ import com.masjid.jemaah.BuildConfig
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
@@ -23,5 +26,11 @@ object AppModule {
             "prod" -> ProdEnvConfig()
             else -> DevEnvConfig()
         }
+    }
+
+    @Provides
+    @Singleton
+    fun provideSensorManager(@ApplicationContext context: Context): SensorManager {
+        return context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
     }
 }

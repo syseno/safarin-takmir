@@ -78,6 +78,8 @@ dependencies {
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
     implementation(libs.androidx.hilt.navigation.compose)
+    implementation("androidx.hilt:hilt-work:1.2.0")
+    ksp("androidx.hilt:hilt-compiler:1.2.0")
 
     // Room
     implementation(libs.room.runtime)
@@ -90,16 +92,43 @@ dependencies {
 
     // Coroutines
     implementation(libs.kotlinx.coroutines.android)
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
+
+    // Location & WorkManager
+    implementation(libs.play.services.location)
+    implementation(libs.work.runtime.ktx)
 
     // Serialization
     implementation(libs.kotlinx.serialization.json)
 
-    // Ktor — explicit direct deps so KSP resolves HttpClient / Android engine
+    // Ktor — explicit direct deps so KSP resolves HttpClient / OkHttp engine
     // in @Module classes without 'error.NonExistentClass'
     implementation(libs.ktor.client.core)
-    implementation(libs.ktor.client.android)
+    implementation(libs.ktor.client.okhttp)
     implementation(libs.ktor.client.content.negotiation)
     implementation(libs.ktor.client.auth)
     implementation(libs.ktor.client.logging)
     implementation(libs.ktor.serialization.kotlinx.json)
+
+    // Chucker
+    "devImplementation"(libs.chucker.library)
+    "stagingImplementation"(libs.chucker.library)
+    "prodImplementation"(libs.chucker.library.no.op)
+}
+
+configurations.all {
+    resolutionStrategy.eachDependency {
+        if (requested.group == "androidx.lifecycle") {
+            useVersion("2.8.2")
+        }
+        if (requested.group == "androidx.activity") {
+            useVersion("1.9.0")
+        }
+        if (requested.group == "org.jetbrains.kotlin") {
+            useVersion("1.9.22")
+        }
+        if (requested.group == "org.jetbrains.kotlinx" && requested.name.startsWith("kotlinx-coroutines")) {
+            useVersion("1.7.3")
+        }
+    }
 }

@@ -91,6 +91,73 @@ data class InventoryItem(
 )
 
 // ============================================================
+// Adzan / Prayer Schedule
+// ============================================================
+
+@Serializable
+data class AdzanTime(
+    val name: String,
+    val time: String,
+    val isNext: Boolean = false
+)
+
+@Serializable
+data class DailyAdzanSchedule(
+    val date: String,
+    val dayLabel: String, // e.g. "Hari Ini", "Besok"
+    val hijriDate: String? = null,
+    val times: List<AdzanTime>
+)
+
+@Serializable
+data class PrayerMethodItem(
+    val id: Int? = null,
+    val name: String = ""
+)
+
+@Serializable
+data class PrayerMethodsResponse(
+    val code: Int,
+    val status: String,
+    val data: Map<String, PrayerMethodItem>
+)
+
+@Serializable
+data class PrayerScheduleResponse(
+    val code: Int,
+    val status: String,
+    val data: PrayerData
+)
+
+@Serializable
+data class PrayerData(
+    val timings: Map<String, String>,
+    val date: PrayerDate
+)
+
+@Serializable
+data class PrayerDate(
+    val readable: String,
+    val timestamp: String,
+    val hijri: HijriDate
+)
+
+@Serializable
+data class HijriDate(
+    val date: String,
+    val day: String,
+    val month: HijriMonth,
+    val year: String
+)
+
+@Serializable
+data class HijriMonth(
+    val number: Int,
+    val en: String,
+    val ar: String
+)
+
+// ============================================================
 // Dashboard — matches BE response: { finance, donations, inventory, recentFinance, upcomingEvents }
 // ============================================================
 

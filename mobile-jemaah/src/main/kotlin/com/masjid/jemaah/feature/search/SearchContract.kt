@@ -1,5 +1,6 @@
 package com.masjid.jemaah.feature.search
 
+import com.masjid.core.domain.DailyAdzanSchedule
 import com.masjid.core.domain.Masjid
 import com.masjid.core.mvi.BaseIntent
 import com.masjid.core.mvi.BaseState
@@ -9,9 +10,9 @@ sealed class SearchIntent : BaseIntent {
     object LoadInitial : SearchIntent()
 }
 
-sealed class SearchState : BaseState {
-    object Idle : SearchState()
-    object Loading : SearchState()
-    data class Success(val masjids: List<Masjid>) : SearchState()
-    data class Error(val message: String) : SearchState()
-}
+data class SearchState(
+    val masjids: List<Masjid> = emptyList(),
+    val adzanSchedules: List<DailyAdzanSchedule> = emptyList(),
+    val isLoading: Boolean = false,
+    val error: String? = null
+) : BaseState

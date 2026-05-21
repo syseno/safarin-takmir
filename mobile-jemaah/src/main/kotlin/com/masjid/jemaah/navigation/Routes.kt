@@ -14,4 +14,5 @@ sealed class JemaahRoutes(val route: String) {
         fun createRoute(id: String) = "events/$id"
     }
     object Profile : JemaahRoutes("profile")
+    object Kiblat : JemaahRoutes("kiblat")
 }

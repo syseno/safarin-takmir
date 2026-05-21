@@ -12,6 +12,8 @@ import com.masjid.jemaah.feature.detail.DetailScreen
 import com.masjid.jemaah.feature.event.EventScreen
 import com.masjid.jemaah.feature.kas.KasScreen
 import com.masjid.jemaah.feature.search.SearchScreen
+import com.masjid.jemaah.feature.profile.ProfileScreen
+import com.masjid.jemaah.feature.kiblat.KiblatScreen
 
 @Composable
 fun JemaahNavGraph(
@@ -54,11 +56,17 @@ fun JemaahNavGraph(
                     navController.navigate(JemaahRoutes.Detail.createRoute(id))
                 },
                 onNavigateToProfile = {
-                    // Profile placeholder — navigates to login (logout)
-                    navController.navigate(JemaahRoutes.Login.route) {
-                        popUpTo(0) { inclusive = true }
-                    }
+                    navController.navigate(JemaahRoutes.Profile.route)
+                },
+                onNavigateToKiblat = {
+                    navController.navigate(JemaahRoutes.Kiblat.route)
                 }
+            )
+        }
+
+        composable(JemaahRoutes.Kiblat.route) {
+            KiblatScreen(
+                onNavigateBack = { navController.popBackStack() }
             )
         }
 
@@ -98,6 +106,17 @@ fun JemaahNavGraph(
             EventScreen(
                 masjidId = id,
                 onNavigateBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(JemaahRoutes.Profile.route) {
+            ProfileScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onLogout = {
+                    navController.navigate(JemaahRoutes.Login.route) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
             )
         }
     }
