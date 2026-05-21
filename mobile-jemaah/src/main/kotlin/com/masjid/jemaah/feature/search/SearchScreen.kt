@@ -64,7 +64,19 @@ fun SearchScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Jemaah") },
+                title = { 
+                    Column {
+                        Text("Jemaah")
+                        val locationText = listOfNotNull(state.currentCity, state.currentProvince).joinToString(", ")
+                        if (locationText.isNotBlank()) {
+                            Text(
+                                text = locationText,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                },
                 actions = {
                     IconButton(onClick = onNavigateToKiblat) {
                         Icon(Icons.Default.Explore, contentDescription = "Kiblat")

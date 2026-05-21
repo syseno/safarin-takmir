@@ -41,9 +41,12 @@ class SearchViewModel @Inject constructor(
             val location = locationProvider.getCurrentLocation()
             if (location != null) {
                 prayerRepository.refreshPrayerSchedule(location.latitude, location.longitude)
+                val (city, province) = locationProvider.getLocationNames(location.latitude, location.longitude)
+                _state.value = _state.value.copy(currentCity = city, currentProvince = province)
             } else {
                 // Fallback to a default location (e.g. Jakarta) if no GPS available
                 prayerRepository.refreshPrayerSchedule(-6.200000, 106.816666)
+                _state.value = _state.value.copy(currentCity = "Jakarta Pusat", currentProvince = "DKI Jakarta")
             }
         }
     }

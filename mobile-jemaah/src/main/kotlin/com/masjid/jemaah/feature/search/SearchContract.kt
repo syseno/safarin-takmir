@@ -13,6 +13,8 @@ sealed class SearchIntent : BaseIntent {
 data class SearchState(
     val masjids: List<Masjid> = emptyList(),
     val adzanSchedules: List<DailyAdzanSchedule> = emptyList(),
+    val currentCity: String? = null,
+    val currentProvince: String? = null,
     val isLoading: Boolean = false,
     val error: String? = null
 ) : BaseState
