@@ -34,7 +34,7 @@ import java.util.*
 @Composable
 fun EventFormScreen(
     eventId: String?,
-    onNavigateBack: () -> Unit,
+    onNavigateBack: (Boolean) -> Unit,
     viewModel: EventFormViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
@@ -92,7 +92,7 @@ fun EventFormScreen(
             currentImageUrl = ev.imageUrl
             eventGroupId = ev.groupId
         } else if (state is EventFormState.Success) {
-            onNavigateBack()
+            onNavigateBack(true)
         }
     }
 
@@ -265,7 +265,7 @@ fun EventFormScreen(
                 ),
                 title = { Text(if (eventId == null) "Tambah Event" else "Edit Event", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
+                    IconButton(onClick = { onNavigateBack(false) }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 }
@@ -288,7 +288,7 @@ fun EventFormScreen(
                             style = MaterialTheme.typography.bodyMedium
                         )
                         Spacer(modifier = Modifier.height(16.dp))
-                        Button(onClick = onNavigateBack, colors = ButtonDefaults.buttonColors(containerColor = IslamicGreen)) {
+                        Button(onClick = { onNavigateBack(false) }, colors = ButtonDefaults.buttonColors(containerColor = IslamicGreen)) {
                             Text("Kembali")
                         }
                     }

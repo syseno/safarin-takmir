@@ -19,12 +19,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
+import androidx.navigation.NavController
 import com.masjid.core.domain.Finance
 import com.masjid.takmir.ui.theme.ExpenseRed
 import com.masjid.takmir.ui.theme.IncomeGreen
@@ -38,12 +36,26 @@ import java.util.Locale
 fun TransactionScreen(
     onNavigateBack: () -> Unit,
     onNavigateToForm: (String?) -> Unit,
+    navController: NavController,
     viewModel: TransactionViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
     val formatter = NumberFormat.getCurrencyInstance(Locale("id", "ID"))
     var transactionToDelete by remember { mutableStateOf<Finance?>(null) }
     val pullToRefreshState = rememberPullToRefreshState()
+
+    // Observe refresh flag from backstack
+    val refreshNeeded by navController.currentBackStackEntry
+        ?.savedStateHandle
+        ?.getStateFlow("refresh", false)
+        ?.collectAsState() ?: remember { mutableStateOf(false) }
+
+    LaunchedEffect(refreshNeeded) {
+        if (refreshNeeded) {
+            viewModel.handleIntent(TransactionIntent.Refresh)
+            navController.currentBackStackEntry?.savedStateHandle?.set("refresh", false)
+        }
+    }
 
     if (pullToRefreshState.isRefreshing) {
         LaunchedEffect(Unit) {
@@ -54,19 +66,6 @@ fun TransactionScreen(
     LaunchedEffect(state.isLoading) {
         if (!state.isLoading) {
             pullToRefreshState.endRefresh()
-        }
-    }
-
-    val lifecycleOwner = LocalLifecycleOwner.current
-    DisposableEffect(lifecycleOwner) {
-        val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME) {
-                viewModel.handleIntent(TransactionIntent.Refresh)
-            }
-        }
-        lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose {
-            lifecycleOwner.lifecycle.removeObserver(observer)
         }
     }
 

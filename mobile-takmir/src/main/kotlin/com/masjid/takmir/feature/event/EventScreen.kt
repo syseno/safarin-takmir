@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.masjid.core.domain.MasjidEvent
 import com.masjid.takmir.ui.theme.IslamicGreen
@@ -37,11 +38,25 @@ import com.masjid.takmir.ui.theme.IslamicGreenDark
 fun EventScreen(
     onNavigateBack: () -> Unit,
     onNavigateToForm: (String?) -> Unit,
+    navController: NavController,
     viewModel: EventViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
     var eventToDelete by remember { mutableStateOf<MasjidEvent?>(null) }
     val pullToRefreshState = rememberPullToRefreshState()
+
+    // Observe refresh flag from backstack
+    val refreshNeeded by navController.currentBackStackEntry
+        ?.savedStateHandle
+        ?.getStateFlow("refresh", false)
+        ?.collectAsState() ?: remember { mutableStateOf(false) }
+
+    LaunchedEffect(refreshNeeded) {
+        if (refreshNeeded) {
+            viewModel.handleIntent(EventIntent.Refresh)
+            navController.currentBackStackEntry?.savedStateHandle?.set("refresh", false)
+        }
+    }
 
     if (pullToRefreshState.isRefreshing) {
         LaunchedEffect(Unit) {
@@ -52,19 +67,6 @@ fun EventScreen(
     LaunchedEffect(state) {
         if (state is EventState.Success || state is EventState.Error) {
             pullToRefreshState.endRefresh()
-        }
-    }
-
-    val lifecycleOwner = LocalLifecycleOwner.current
-    DisposableEffect(lifecycleOwner) {
-        val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME) {
-                viewModel.handleIntent(EventIntent.Refresh)
-            }
-        }
-        lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose {
-            lifecycleOwner.lifecycle.removeObserver(observer)
         }
     }
 

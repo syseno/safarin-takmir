@@ -3,6 +3,8 @@ package com.masjid.takmir.feature.event
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.masjid.core.domain.AppResult
+import com.masjid.takmir.core.RefreshManager
+import com.masjid.takmir.core.RefreshType
 import com.masjid.takmir.domain.usecase.DeleteEventUseCase
 import com.masjid.takmir.domain.usecase.GetEventsUseCase
 import com.masjid.takmir.security.EncryptedTokenManager
@@ -17,14 +19,26 @@ import javax.inject.Inject
 class EventViewModel @Inject constructor(
     private val getEventsUseCase: GetEventsUseCase,
     private val deleteEventUseCase: DeleteEventUseCase,
-    private val tokenManager: EncryptedTokenManager
+    private val tokenManager: EncryptedTokenManager,
+    private val refreshManager: RefreshManager
 ) : ViewModel() {
 
     private val _state = MutableStateFlow<EventState>(EventState.Loading)
     val state: StateFlow<EventState> = _state.asStateFlow()
 
     init {
+        observeRefresh()
         fetchEvents()
+    }
+
+    private fun observeRefresh() {
+        viewModelScope.launch {
+            refreshManager.refreshEvent.collect { type ->
+                if (type == RefreshType.EVENT) {
+                    fetchEvents()
+                }
+            }
+        }
     }
 
     fun handleIntent(intent: EventIntent) {
@@ -58,7 +72,8 @@ class EventViewModel @Inject constructor(
             val masjidId = tokenManager.getMasjidId() ?: return@launch
             when (val result = deleteEventUseCase(masjidId, eventId, deleteType)) {
                 is AppResult.Success -> {
-                    fetchEvents() // Refresh list
+                    fetchEvents() // Refresh local list
+                    refreshManager.triggerRefresh(RefreshType.EVENT) // Notify others
                 }
                 is AppResult.Error -> {
                     fetchEvents()

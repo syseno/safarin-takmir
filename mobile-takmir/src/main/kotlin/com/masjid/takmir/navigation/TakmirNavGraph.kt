@@ -43,7 +43,8 @@ fun TakmirNavGraph(
                 onNavigateToEvents = { navController.navigate(TakmirRoutes.Events.route) },
                 onNavigateToProfile = { navController.navigate(TakmirRoutes.Profile.route) },
                 onNavigateToDonation = { navController.navigate(TakmirRoutes.Donation.route) },
-                onNavigateToInventory = { navController.navigate(TakmirRoutes.Inventory.route) }
+                onNavigateToInventory = { navController.navigate(TakmirRoutes.Inventory.route) },
+                navController = navController
             )
         }
 
@@ -53,7 +54,8 @@ fun TakmirNavGraph(
                 onNavigateBack = { navController.popBackStack() },
                 onNavigateToForm = { id ->
                     navController.navigate(TakmirRoutes.TransactionForm.createRoute(id))
-                }
+                },
+                navController = navController
             )
         }
         composable(
@@ -64,7 +66,12 @@ fun TakmirNavGraph(
         ) { backStackEntry ->
             TransactionFormScreen(
                 financeId = backStackEntry.arguments?.getString("id"),
-                onNavigateBack = { navController.popBackStack() }
+                onNavigateBack = { refresh ->
+                    if (refresh) {
+                        navController.previousBackStackEntry?.savedStateHandle?.set("refresh", true)
+                    }
+                    navController.popBackStack()
+                }
             )
         }
 
@@ -74,7 +81,8 @@ fun TakmirNavGraph(
                 onNavigateBack = { navController.popBackStack() },
                 onNavigateToForm = { id ->
                     navController.navigate(TakmirRoutes.EventForm.createRoute(id))
-                }
+                },
+                navController = navController
             )
         }
         composable(
@@ -85,7 +93,12 @@ fun TakmirNavGraph(
         ) { backStackEntry ->
             EventFormScreen(
                 eventId = backStackEntry.arguments?.getString("id"),
-                onNavigateBack = { navController.popBackStack() }
+                onNavigateBack = { refresh ->
+                    if (refresh) {
+                        navController.previousBackStackEntry?.savedStateHandle?.set("refresh", true)
+                    }
+                    navController.popBackStack()
+                }
             )
         }
 
@@ -93,12 +106,18 @@ fun TakmirNavGraph(
         composable(TakmirRoutes.Donation.route) {
             DonationScreen(
                 onNavigateBack = { navController.popBackStack() },
-                onNavigateToForm = { navController.navigate(TakmirRoutes.DonationForm.route) }
+                onNavigateToForm = { navController.navigate(TakmirRoutes.DonationForm.route) },
+                navController = navController
             )
         }
         composable(TakmirRoutes.DonationForm.route) {
             DonationFormScreen(
-                onNavigateBack = { navController.popBackStack() }
+                onNavigateBack = { refresh ->
+                    if (refresh) {
+                        navController.previousBackStackEntry?.savedStateHandle?.set("refresh", true)
+                    }
+                    navController.popBackStack()
+                }
             )
         }
 
@@ -106,12 +125,18 @@ fun TakmirNavGraph(
         composable(TakmirRoutes.Inventory.route) {
             InventoryScreen(
                 onNavigateBack = { navController.popBackStack() },
-                onNavigateToForm = { navController.navigate(TakmirRoutes.InventoryForm.route) }
+                onNavigateToForm = { navController.navigate(TakmirRoutes.InventoryForm.route) },
+                navController = navController
             )
         }
         composable(TakmirRoutes.InventoryForm.route) {
             InventoryFormScreen(
-                onNavigateBack = { navController.popBackStack() }
+                onNavigateBack = { refresh ->
+                    if (refresh) {
+                        navController.previousBackStackEntry?.savedStateHandle?.set("refresh", true)
+                    }
+                    navController.popBackStack()
+                }
             )
         }
 

@@ -7,6 +7,8 @@ import com.masjid.core.domain.CreateFinanceRequest
 import com.masjid.core.domain.Finance
 import com.masjid.core.domain.UpdateFinanceRequest
 import com.masjid.core.mvi.BaseState
+import com.masjid.takmir.core.RefreshManager
+import com.masjid.takmir.core.RefreshType
 import com.masjid.takmir.data.repository.FinanceRepository
 import com.masjid.takmir.domain.usecase.CreateFinanceUseCase
 import com.masjid.takmir.domain.usecase.UpdateFinanceUseCase
@@ -32,7 +34,8 @@ class TransactionFormViewModel @Inject constructor(
     private val createFinanceUseCase: CreateFinanceUseCase,
     private val updateFinanceUseCase: UpdateFinanceUseCase,
     private val financeRepository: FinanceRepository,
-    private val tokenManager: EncryptedTokenManager
+    private val tokenManager: EncryptedTokenManager,
+    private val refreshManager: RefreshManager
 ) : ViewModel() {
 
     private val _state = MutableStateFlow<TransactionFormState>(TransactionFormState.Idle)
@@ -48,8 +51,6 @@ class TransactionFormViewModel @Inject constructor(
             _state.value = TransactionFormState.Loading
             val masjidId = tokenManager.getMasjidId() ?: return@launch
             
-            // To properly edit, we'd normally get it from DB or API.
-            // Assuming getting the list and finding it is quick.
             when (val result = financeRepository.getFinances(masjidId)) {
                 is AppResult.Success -> {
                     val tx = result.data.find { it.id == financeId }
@@ -83,7 +84,10 @@ class TransactionFormViewModel @Inject constructor(
             }
 
             when (result) {
-                is AppResult.Success -> _state.value = TransactionFormState.Success
+                is AppResult.Success -> {
+                    refreshManager.triggerRefresh(RefreshType.FINANCE)
+                    _state.value = TransactionFormState.Success
+                }
                 is AppResult.Error -> _state.value = TransactionFormState.Error(result.message)
             }
         }

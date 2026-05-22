@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import androidx.navigation.NavController
 import com.masjid.takmir.ui.theme.IslamicGreen
 import com.masjid.takmir.ui.theme.IslamicGreenDark
 import java.text.NumberFormat
@@ -34,11 +35,25 @@ import java.util.Locale
 fun DonationScreen(
     onNavigateBack: () -> Unit,
     onNavigateToForm: () -> Unit,
+    navController: NavController,
     viewModel: DonationViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
     val formatter = NumberFormat.getCurrencyInstance(Locale("id", "ID"))
     val pullToRefreshState = rememberPullToRefreshState()
+
+    // Observe refresh flag from backstack
+    val refreshNeeded by navController.currentBackStackEntry
+        ?.savedStateHandle
+        ?.getStateFlow("refresh", false)
+        ?.collectAsState() ?: remember { mutableStateOf(false) }
+
+    LaunchedEffect(refreshNeeded) {
+        if (refreshNeeded) {
+            viewModel.handleIntent(DonationIntent.Refresh)
+            navController.currentBackStackEntry?.savedStateHandle?.set("refresh", false)
+        }
+    }
 
     if (pullToRefreshState.isRefreshing) {
         LaunchedEffect(Unit) {
@@ -49,19 +64,6 @@ fun DonationScreen(
     LaunchedEffect(state) {
         if (state is DonationState.Success || state is DonationState.Error) {
             pullToRefreshState.endRefresh()
-        }
-    }
-
-    val lifecycleOwner = LocalLifecycleOwner.current
-    DisposableEffect(lifecycleOwner) {
-        val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME) {
-                viewModel.handleIntent(DonationIntent.Refresh)
-            }
-        }
-        lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose {
-            lifecycleOwner.lifecycle.removeObserver(observer)
         }
     }
 

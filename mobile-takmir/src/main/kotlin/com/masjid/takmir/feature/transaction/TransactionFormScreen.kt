@@ -22,7 +22,7 @@ import com.masjid.takmir.ui.theme.IslamicGreenDark
 @Composable
 fun TransactionFormScreen(
     financeId: String?,
-    onNavigateBack: () -> Unit,
+    onNavigateBack: (Boolean) -> Unit,
     viewModel: TransactionFormViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
@@ -45,7 +45,7 @@ fun TransactionFormScreen(
             type = tx.type
             description = tx.description ?: ""
         } else if (state is TransactionFormState.Success) {
-            onNavigateBack()
+            onNavigateBack(true)
         }
     }
 
@@ -60,7 +60,7 @@ fun TransactionFormScreen(
                 ),
                 title = { Text(if (financeId == null) "Tambah Transaksi" else "Edit Transaksi", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
+                    IconButton(onClick = { onNavigateBack(false) }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 }
@@ -83,7 +83,7 @@ fun TransactionFormScreen(
                             style = MaterialTheme.typography.bodyMedium
                         )
                         Spacer(modifier = Modifier.height(16.dp))
-                        Button(onClick = onNavigateBack, colors = ButtonDefaults.buttonColors(containerColor = IslamicGreen)) {
+                        Button(onClick = { onNavigateBack(false) }, colors = ButtonDefaults.buttonColors(containerColor = IslamicGreen)) {
                             Text("Kembali")
                         }
                     }

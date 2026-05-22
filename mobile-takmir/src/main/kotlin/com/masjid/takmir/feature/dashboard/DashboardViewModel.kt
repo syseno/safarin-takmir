@@ -3,6 +3,7 @@ package com.masjid.takmir.feature.dashboard
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.masjid.core.domain.AppResult
+import com.masjid.takmir.core.RefreshManager
 import com.masjid.takmir.domain.usecase.GetDashboardUseCase
 import com.masjid.takmir.security.EncryptedTokenManager
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -15,14 +16,24 @@ import javax.inject.Inject
 @HiltViewModel
 class DashboardViewModel @Inject constructor(
     private val getDashboardUseCase: GetDashboardUseCase,
-    private val tokenManager: EncryptedTokenManager
+    private val tokenManager: EncryptedTokenManager,
+    private val refreshManager: RefreshManager
 ) : ViewModel() {
 
     private val _state = MutableStateFlow<DashboardState>(DashboardState.Loading)
     val state: StateFlow<DashboardState> = _state.asStateFlow()
 
     init {
-        handleIntent(DashboardIntent.LoadDashboard)
+        observeRefresh()
+        fetchDashboard()
+    }
+
+    private fun observeRefresh() {
+        viewModelScope.launch {
+            refreshManager.refreshEvent.collect {
+                fetchDashboard()
+            }
+        }
     }
 
     fun handleIntent(intent: DashboardIntent) {
@@ -42,7 +53,6 @@ class DashboardViewModel @Inject constructor(
             when (val result = getDashboardUseCase(masjidId)) {
                 is AppResult.Success -> {
                     val data = result.data
-                    // Map BE response shape to UI state
                     _state.value = DashboardState.Success(
                         totalSaldo = data.finance.balance.toLong(),
                         totalIncome = data.finance.totalIncome.toLong(),

@@ -5,6 +5,8 @@ import androidx.lifecycle.viewModelScope
 import com.masjid.core.domain.AppResult
 import com.masjid.core.domain.UpdateConditionRequest
 import com.masjid.core.domain.UpdateQuantityRequest
+import com.masjid.takmir.core.RefreshManager
+import com.masjid.takmir.core.RefreshType
 import com.masjid.takmir.domain.usecase.GetInventoryListUseCase
 import com.masjid.takmir.data.repository.InventoryRepository
 import com.masjid.takmir.security.EncryptedTokenManager
@@ -19,13 +21,27 @@ import javax.inject.Inject
 class InventoryViewModel @Inject constructor(
     private val getInventoryListUseCase: GetInventoryListUseCase,
     private val inventoryRepository: InventoryRepository,
-    private val tokenManager: EncryptedTokenManager
+    private val tokenManager: EncryptedTokenManager,
+    private val refreshManager: RefreshManager
 ) : ViewModel() {
 
     private val _state = MutableStateFlow<InventoryState>(InventoryState.Loading)
     val state: StateFlow<InventoryState> = _state.asStateFlow()
 
-    init { handleIntent(InventoryIntent.LoadInventory) }
+    init {
+        observeRefresh()
+        fetchInventory()
+    }
+
+    private fun observeRefresh() {
+        viewModelScope.launch {
+            refreshManager.refreshEvent.collect { type ->
+                if (type == RefreshType.INVENTORY) {
+                    fetchInventory()
+                }
+            }
+        }
+    }
 
     fun handleIntent(intent: InventoryIntent) {
         when (intent) {
@@ -55,6 +71,7 @@ class InventoryViewModel @Inject constructor(
             val masjidId = tokenManager.getMasjidId() ?: return@launch
             inventoryRepository.updateQuantity(masjidId, itemId, UpdateQuantityRequest(quantity))
             fetchInventory()
+            refreshManager.triggerRefresh(RefreshType.INVENTORY) // Notify others
         }
     }
 
@@ -63,6 +80,7 @@ class InventoryViewModel @Inject constructor(
             val masjidId = tokenManager.getMasjidId() ?: return@launch
             inventoryRepository.updateCondition(masjidId, itemId, UpdateConditionRequest(condition))
             fetchInventory()
+            refreshManager.triggerRefresh(RefreshType.INVENTORY) // Notify others
         }
     }
 }

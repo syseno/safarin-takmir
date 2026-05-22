@@ -28,7 +28,7 @@ sealed class InventoryFormState {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun InventoryFormScreen(
-    onNavigateBack: () -> Unit,
+    onNavigateBack: (Boolean) -> Unit,
     viewModel: InventoryFormViewModel = hiltViewModel()
 ) {
     val state by viewModel.formState.collectAsState()
@@ -39,7 +39,7 @@ fun InventoryFormScreen(
     var conditionExpanded by remember { mutableStateOf(false) }
 
     LaunchedEffect(state) {
-        if (state is InventoryFormState.Success) onNavigateBack()
+        if (state is InventoryFormState.Success) onNavigateBack(true)
     }
 
     Scaffold(
@@ -53,7 +53,7 @@ fun InventoryFormScreen(
                 ),
                 title = { Text("Tambah Barang Inventaris", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
+                    IconButton(onClick = { onNavigateBack(false) }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 }
@@ -112,11 +112,20 @@ fun InventoryFormScreen(
             }
 
             if (state is InventoryFormState.Error) {
-                Text(
-                    (state as InventoryFormState.Error).message,
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodySmall
-                )
+                Column(
+                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        (state as InventoryFormState.Error).message,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                    Spacer(Modifier.height(16.dp))
+                    Button(onClick = { onNavigateBack(false) }, colors = ButtonDefaults.buttonColors(containerColor = IslamicGreen)) {
+                        Text("Kembali")
+                    }
+                }
             }
 
             Spacer(Modifier.weight(1f))

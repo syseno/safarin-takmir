@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import androidx.navigation.NavController
 import com.masjid.takmir.ui.theme.*
 import java.text.NumberFormat
 import java.util.Locale
@@ -39,11 +40,25 @@ fun DashboardScreen(
     onNavigateToProfile: () -> Unit = {},
     onNavigateToDonation: () -> Unit = {},
     onNavigateToInventory: () -> Unit = {},
+    navController: NavController,
     viewModel: DashboardViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
     val formatter = NumberFormat.getCurrencyInstance(Locale("id", "ID"))
     val pullToRefreshState = rememberPullToRefreshState()
+
+    // Observe refresh flag from backstack
+    val refreshNeeded by navController.currentBackStackEntry
+        ?.savedStateHandle
+        ?.getStateFlow("refresh", false)
+        ?.collectAsState() ?: remember { mutableStateOf(false) }
+
+    LaunchedEffect(refreshNeeded) {
+        if (refreshNeeded) {
+            viewModel.handleIntent(DashboardIntent.Refresh)
+            navController.currentBackStackEntry?.savedStateHandle?.set("refresh", false)
+        }
+    }
 
     if (pullToRefreshState.isRefreshing) {
         LaunchedEffect(Unit) {
@@ -54,19 +69,6 @@ fun DashboardScreen(
     LaunchedEffect(state) {
         if (state is DashboardState.Success || state is DashboardState.Error) {
             pullToRefreshState.endRefresh()
-        }
-    }
-
-    val lifecycleOwner = LocalLifecycleOwner.current
-    DisposableEffect(lifecycleOwner) {
-        val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME) {
-                viewModel.handleIntent(DashboardIntent.Refresh)
-            }
-        }
-        lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose {
-            lifecycleOwner.lifecycle.removeObserver(observer)
         }
     }
 

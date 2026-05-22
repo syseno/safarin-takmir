@@ -21,7 +21,7 @@ import com.masjid.takmir.ui.theme.IslamicGreenDark
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DonationFormScreen(
-    onNavigateBack: () -> Unit,
+    onNavigateBack: (Boolean) -> Unit,
     viewModel: DonationFormViewModel = hiltViewModel()
 ) {
     val state by viewModel.formState.collectAsState()
@@ -34,7 +34,7 @@ fun DonationFormScreen(
     val donationTypes = listOf("SADAQAH", "INFAQ", "ZAKAT")
 
     LaunchedEffect(state) {
-        if (state is DonationFormState.Success) onNavigateBack()
+        if (state is DonationFormState.Success) onNavigateBack(true)
     }
 
     Scaffold(
@@ -48,7 +48,7 @@ fun DonationFormScreen(
                 ),
                 title = { Text("Catat Donasi Baru", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
+                    IconButton(onClick = { onNavigateBack(false) }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 }
@@ -62,6 +62,23 @@ fun DonationFormScreen(
                 .fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
+            if (state is DonationFormState.Error) {
+                Column(
+                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        (state as DonationFormState.Error).message,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                    Spacer(Modifier.height(16.dp))
+                    Button(onClick = { onNavigateBack(false) }, colors = ButtonDefaults.buttonColors(containerColor = IslamicGreen)) {
+                        Text("Kembali")
+                    }
+                }
+            }
+
             // Type Dropdown
             ExposedDropdownMenuBox(
                 expanded = typeExpanded,

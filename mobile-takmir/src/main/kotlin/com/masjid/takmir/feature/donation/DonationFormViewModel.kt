@@ -3,6 +3,8 @@ package com.masjid.takmir.feature.donation
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.masjid.core.domain.AppResult
+import com.masjid.takmir.core.RefreshManager
+import com.masjid.takmir.core.RefreshType
 import com.masjid.takmir.domain.usecase.CreateDonationUseCase
 import com.masjid.takmir.security.EncryptedTokenManager
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -22,7 +24,8 @@ sealed class DonationFormState {
 @HiltViewModel
 class DonationFormViewModel @Inject constructor(
     private val createDonationUseCase: CreateDonationUseCase,
-    private val tokenManager: EncryptedTokenManager
+    private val tokenManager: EncryptedTokenManager,
+    private val refreshManager: RefreshManager
 ) : ViewModel() {
 
     private val _formState = MutableStateFlow<DonationFormState>(DonationFormState.Idle)
@@ -36,8 +39,13 @@ class DonationFormViewModel @Inject constructor(
             }
             _formState.value = DonationFormState.Submitting
             when (val result = createDonationUseCase(masjidId, type, amount, description)) {
-                is AppResult.Success -> _formState.value = DonationFormState.Success
-                is AppResult.Error -> _formState.value = DonationFormState.Error(result.message)
+                is AppResult.Success -> {
+                    refreshManager.triggerRefresh(RefreshType.DONATION)
+                    _formState.value = DonationFormState.Success
+                }
+                is AppResult.Error -> {
+                    _formState.value = DonationFormState.Error(result.message)
+                }
             }
         }
     }

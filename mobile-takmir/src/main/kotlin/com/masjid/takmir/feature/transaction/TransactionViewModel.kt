@@ -3,6 +3,8 @@ package com.masjid.takmir.feature.transaction
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.masjid.core.domain.AppResult
+import com.masjid.takmir.core.RefreshManager
+import com.masjid.takmir.core.RefreshType
 import com.masjid.takmir.domain.usecase.DeleteFinanceUseCase
 import com.masjid.takmir.domain.usecase.GetFinancesUseCase
 import com.masjid.takmir.security.EncryptedTokenManager
@@ -18,14 +20,26 @@ import javax.inject.Inject
 class TransactionViewModel @Inject constructor(
     private val getFinancesUseCase: GetFinancesUseCase,
     private val deleteFinanceUseCase: DeleteFinanceUseCase,
-    private val tokenManager: EncryptedTokenManager
+    private val tokenManager: EncryptedTokenManager,
+    private val refreshManager: RefreshManager
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(TransactionState())
     val state: StateFlow<TransactionState> = _state.asStateFlow()
 
     init {
+        observeRefresh()
         fetchTransactions()
+    }
+
+    private fun observeRefresh() {
+        viewModelScope.launch {
+            refreshManager.refreshEvent.collect { type ->
+                if (type == RefreshType.FINANCE) {
+                    fetchTransactions()
+                }
+            }
+        }
     }
 
     fun handleIntent(intent: TransactionIntent) {
@@ -60,6 +74,7 @@ class TransactionViewModel @Inject constructor(
             when (val result = deleteFinanceUseCase(masjidId, financeId)) {
                 is AppResult.Success -> {
                     fetchTransactions()
+                    refreshManager.triggerRefresh(RefreshType.FINANCE) // Notify dashboard etc
                 }
                 is AppResult.Error -> {
                     _state.update { it.copy(error = result.message) }
