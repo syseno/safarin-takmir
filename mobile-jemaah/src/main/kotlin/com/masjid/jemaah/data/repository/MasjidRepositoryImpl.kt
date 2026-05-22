@@ -30,6 +30,18 @@ class MasjidRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun getNearestMasjids(
+        latitude: Double,
+        longitude: Double,
+        radius: Double?,
+        limit: Int?,
+        cityId: String?
+    ): AppResult<List<Masjid>> {
+        return AppResult.runCatching {
+            publicApiClient.getNearestMasjid(latitude, longitude, radius, limit, cityId)
+        }
+    }
+
     private fun Masjid.toEntity() = CachedMasjidEntity(
         id = id,
         name = name,

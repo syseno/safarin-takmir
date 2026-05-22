@@ -35,7 +35,8 @@ data class Masjid(
     val city: LocationItem? = null,
     val country: LocationItem? = null,
     val district: LocationItem? = null,
-    val subDistrict: LocationItem? = null
+    val subDistrict: LocationItem? = null,
+    val distance: Double? = null
 )
 
 @Serializable

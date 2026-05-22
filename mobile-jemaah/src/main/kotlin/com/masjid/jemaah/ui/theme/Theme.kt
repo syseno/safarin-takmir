@@ -8,28 +8,34 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
 private val DarkColorScheme = darkColorScheme(
-    primary = JemaahBlue,
+    primary = IslamicGreen,
     onPrimary = Color.White,
-    primaryContainer = JemaahBlueDark,
-    secondary = JemaahIndigo,
+    primaryContainer = IslamicGreenDark,
+    onPrimaryContainer = Color.White,
+    secondary = IslamicGold,
+    onSecondary = Color.Black,
     background = BackgroundDark,
-    surface = SurfaceDark,
-    surfaceVariant = SurfaceVariantDark,
-    onSurface = OnSurfaceDark,
     onBackground = OnSurfaceDark,
+    surface = SurfaceDark,
+    onSurface = OnSurfaceDark,
+    surfaceVariant = SurfaceVariantDark,
+    onSurfaceVariant = OnSurfaceVariantDark,
     error = ExpenseRed,
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = JemaahBlue,
+    primary = IslamicGreen,
     onPrimary = Color.White,
-    primaryContainer = JemaahBlueLight,
-    secondary = JemaahIndigo,
-    background = BackgroundLight,
-    surface = SurfaceLight,
-    surfaceVariant = SurfaceVariantLight,
-    onSurface = OnSurfaceLight,
+    primaryContainer = IslamicGreenLight,
+    onPrimaryContainer = IslamicGreenDark,
+    secondary = IslamicGold,
+    onSecondary = Color.White,
+    background = OffWhite,
     onBackground = OnSurfaceLight,
+    surface = SurfaceLight,
+    onSurface = OnSurfaceLight,
+    surfaceVariant = SurfaceVariantLight,
+    onSurfaceVariant = OnSurfaceVariantLight,
     error = ExpenseRed,
 )
 

@@ -28,6 +28,28 @@ class PublicApiClient(private val client: HttpClient) {
     }
 
     /**
+     * GET /api/public/masjid/nearest?latitude=&longitude=&radius=&limit=&cityId=
+     * BE returns: { success: Boolean, message: String, data: List<Masjid> }
+     */
+    suspend fun getNearestMasjid(
+        latitude: Double,
+        longitude: Double,
+        radius: Double? = null,
+        limit: Int? = null,
+        cityId: String? = null
+    ): List<Masjid> {
+        val response = client.get("/api/public/masjid/nearest") {
+            parameter("latitude", latitude)
+            parameter("longitude", longitude)
+            if (radius != null) parameter("radius", radius)
+            if (limit != null) parameter("limit", limit)
+            if (cityId != null) parameter("cityId", cityId)
+        }
+        val result: ApiResponse<List<Masjid>> = response.body()
+        return result.data ?: emptyList()
+    }
+
+    /**
      * GET /api/public/masjid/:masjidId
      * BE returns: { success, message, data: <Masjid> }
      */

@@ -11,7 +11,8 @@ import com.masjid.jemaah.feature.auth.RegisterScreen
 import com.masjid.jemaah.feature.detail.DetailScreen
 import com.masjid.jemaah.feature.event.EventScreen
 import com.masjid.jemaah.feature.kas.KasScreen
-import com.masjid.jemaah.feature.search.SearchScreen
+import com.masjid.jemaah.feature.home.HomeScreen
+import com.masjid.jemaah.feature.home.CityMasjidsScreen
 import com.masjid.jemaah.feature.profile.ProfileScreen
 import com.masjid.jemaah.feature.kiblat.KiblatScreen
 
@@ -22,13 +23,13 @@ fun JemaahNavGraph(
 ) {
     NavHost(
         navController = navController,
-        startDestination = if (isLoggedIn) JemaahRoutes.Search.route else JemaahRoutes.Login.route
+        startDestination = if (isLoggedIn) JemaahRoutes.Home.route else JemaahRoutes.Login.route
     ) {
         // ── Auth ──────────────────────────────────────────────────────
         composable(JemaahRoutes.Login.route) {
             LoginScreen(
                 onLoginSuccess = {
-                    navController.navigate(JemaahRoutes.Search.route) {
+                    navController.navigate(JemaahRoutes.Home.route) {
                         popUpTo(JemaahRoutes.Login.route) { inclusive = true }
                     }
                 },
@@ -42,7 +43,7 @@ fun JemaahNavGraph(
             RegisterScreen(
                 onNavigateBack = { navController.popBackStack() },
                 onRegisterSuccess = {
-                    navController.navigate(JemaahRoutes.Search.route) {
+                    navController.navigate(JemaahRoutes.Home.route) {
                         popUpTo(JemaahRoutes.Login.route) { inclusive = true }
                     }
                 }
@@ -50,8 +51,8 @@ fun JemaahNavGraph(
         }
 
         // ── Main ──────────────────────────────────────────────────────
-        composable(JemaahRoutes.Search.route) {
-            SearchScreen(
+        composable(JemaahRoutes.Home.route) {
+            HomeScreen(
                 onNavigateToDetail = { id ->
                     navController.navigate(JemaahRoutes.Detail.createRoute(id))
                 },
@@ -60,6 +61,23 @@ fun JemaahNavGraph(
                 },
                 onNavigateToKiblat = {
                     navController.navigate(JemaahRoutes.Kiblat.route)
+                },
+                onNavigateToCityMasjids = { cityId ->
+                    navController.navigate(JemaahRoutes.CityMasjids.createRoute(cityId))
+                }
+            )
+        }
+
+        composable(
+            route = JemaahRoutes.CityMasjids.route,
+            arguments = listOf(navArgument("cityId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val cityId = backStackEntry.arguments?.getString("cityId") ?: ""
+            CityMasjidsScreen(
+                cityId = cityId,
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToDetail = { id ->
+                    navController.navigate(JemaahRoutes.Detail.createRoute(id))
                 }
             )
         }

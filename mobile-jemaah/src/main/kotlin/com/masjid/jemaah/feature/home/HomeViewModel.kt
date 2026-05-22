@@ -1,4 +1,4 @@
-package com.masjid.jemaah.feature.search
+package com.masjid.jemaah.feature.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -16,22 +16,23 @@ import java.util.*
 import javax.inject.Inject
 
 @HiltViewModel
-class SearchViewModel @Inject constructor(
+class HomeViewModel @Inject constructor(
     private val searchMasjidUseCase: SearchMasjidUseCase,
+    private val getNearestMasjidsUseCase: com.masjid.jemaah.domain.usecase.GetNearestMasjidsUseCase,
     private val prayerRepository: PrayerRepository,
     private val locationProvider: LocationProvider,
     private val adzanScheduler: AdzanScheduler
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow(SearchState())
-    val state: StateFlow<SearchState> = _state.asStateFlow()
+    private val _state = MutableStateFlow(HomeState())
+    val state: StateFlow<HomeState> = _state.asStateFlow()
 
     private val _countdown = MutableStateFlow("")
     val countdown: StateFlow<String> = _countdown.asStateFlow()
 
     init {
         loadAdzanSchedule()
-        handleIntent(SearchIntent.LoadInitial)
+        handleIntent(HomeIntent.LoadInitial)
         startCountdown()
         refreshWithLocation()
     }
@@ -39,15 +40,35 @@ class SearchViewModel @Inject constructor(
     fun refreshWithLocation() {
         viewModelScope.launch {
             val location = locationProvider.getCurrentLocation()
-            if (location != null) {
-                prayerRepository.refreshPrayerSchedule(location.latitude, location.longitude)
-                val (city, province) = locationProvider.getLocationNames(location.latitude, location.longitude)
-                _state.value = _state.value.copy(currentCity = city, currentProvince = province)
+            val lat = location?.latitude ?: -6.200000
+            val lng = location?.longitude ?: 106.816666
+
+            // 1. Refresh prayer schedule
+            prayerRepository.refreshPrayerSchedule(lat, lng)
+
+            // 2. Fetch location names
+            val (city, province) = if (location != null) {
+                locationProvider.getLocationNames(lat, lng)
             } else {
-                // Fallback to a default location (e.g. Jakarta) if no GPS available
-                prayerRepository.refreshPrayerSchedule(-6.200000, 106.816666)
-                _state.value = _state.value.copy(currentCity = "Jakarta Pusat", currentProvince = "DKI Jakarta")
+                Pair("Jakarta Pusat", "DKI Jakarta")
             }
+
+            // 3. Fetch nearest masjids (1km radius, limit 3)
+            val nearestResult = getNearestMasjidsUseCase(latitude = lat, longitude = lng, radius = 1.0, limit = 3)
+            val nearest = if (nearestResult is AppResult.Success) nearestResult.data else emptyList()
+
+            // 4. Resolve the cityId of the closest masjid to the user (without radius constraint)
+            val closestResult = getNearestMasjidsUseCase(latitude = lat, longitude = lng, limit = 1)
+            val closestCityId = if (closestResult is AppResult.Success) closestResult.data.firstOrNull()?.city?.id else null
+
+            _state.value = _state.value.copy(
+                currentCity = city,
+                currentProvince = province,
+                currentLatitude = lat,
+                currentLongitude = lng,
+                nearestMasjids = nearest,
+                cityId = closestCityId
+            )
         }
     }
 
@@ -122,10 +143,10 @@ class SearchViewModel @Inject constructor(
         }
     }
 
-    fun handleIntent(intent: SearchIntent) {
+    fun handleIntent(intent: HomeIntent) {
         when (intent) {
-            is SearchIntent.SubmitSearch -> performSearch(intent.query)
-            is SearchIntent.LoadInitial -> performSearch(null)
+            is HomeIntent.SubmitSearch -> performSearch(intent.query)
+            is HomeIntent.LoadInitial -> performSearch(null)
         }
     }
 
@@ -134,12 +155,42 @@ class SearchViewModel @Inject constructor(
             _state.value = _state.value.copy(isLoading = true, error = null)
             when (val result = searchMasjidUseCase(query)) {
                 is AppResult.Success -> {
-                    _state.value = _state.value.copy(isLoading = false, masjids = result.data)
+                    val currentLat = _state.value.currentLatitude
+                    val currentLng = _state.value.currentLongitude
+                    val masjidsWithDistance = if (currentLat != null && currentLng != null) {
+                        result.data.map { masjid ->
+                            val lat = masjid.latitude
+                            val lng = masjid.longitude
+                            if (lat != null && lng != null) {
+                                val dist = calculateDistance(currentLat, currentLng, lat, lng)
+                                masjid.copy(distance = dist)
+                            } else {
+                                masjid
+                            }
+                        }.sortedBy { it.distance ?: Double.MAX_VALUE }
+                    } else {
+                        result.data
+                    }
+                    _state.value = _state.value.copy(
+                        isLoading = false,
+                        masjids = masjidsWithDistance
+                    )
                 }
                 is AppResult.Error -> {
                     _state.value = _state.value.copy(isLoading = false, error = result.message)
                 }
             }
         }
+    }
+
+    private fun calculateDistance(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
+        val r = 6371.0 // Earth's radius in km
+        val dLat = Math.toRadians(lat2 - lat1)
+        val dLon = Math.toRadians(lon2 - lon1)
+        val a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2)) *
+                Math.sin(dLon / 2) * Math.sin(dLon / 2)
+        val c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+        return r * c
     }
 }
