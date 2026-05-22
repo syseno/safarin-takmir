@@ -10,13 +10,12 @@ sealed class KasIntent : BaseIntent {
     data class LoadMore(val masjidId: String) : KasIntent()
 }
 
-sealed class KasState : BaseState {
-    object Loading : KasState()
-    data class Success(
-        val transactions: List<Finance>,
-        val summary: PublicFinanceSummary,    // totalIncome, totalExpense, balance from BE
-        val currentPage: Int = 1,
-        val hasMore: Boolean = false
-    ) : KasState()
-    data class Error(val message: String) : KasState()
-}
+data class KasState(
+    val transactions: List<Finance> = emptyList(),
+    val summary: PublicFinanceSummary = PublicFinanceSummary(),
+    val isLoading: Boolean = false,
+    val isMoreLoading: Boolean = false,
+    val currentPage: Int = 1,
+    val hasMore: Boolean = false,
+    val error: String? = null
+) : BaseState

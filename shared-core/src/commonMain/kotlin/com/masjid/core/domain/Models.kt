@@ -57,7 +57,14 @@ data class MasjidEvent(
     val date: String,
     val startTime: String,
     val endTime: String,
-    val location: String? = null
+    val location: String? = null,
+    val imageUrl: String? = null,
+    val groupId: String? = null,
+    val isException: Boolean = false,
+    val recurrenceType: String? = null,
+    val recurrenceInterval: Int = 1,
+    val recurrenceEnd: String? = null,
+    val recurrenceDays: String? = null
 )
 
 @Serializable
@@ -331,7 +338,12 @@ data class CreateEventRequest(
     val date: String,       // ISO 8601 date e.g. "2025-06-15"
     val startTime: String,  // HH:mm e.g. "08:00"
     val endTime: String,    // HH:mm e.g. "12:00"
-    val location: String? = null
+    val location: String? = null,
+    val imageUrl: String? = null,
+    val recurrenceType: String? = null,
+    val recurrenceInterval: Int = 1,
+    val recurrenceEnd: String? = null,
+    val recurrenceDays: String? = null
 )
 
 @Serializable
@@ -341,7 +353,9 @@ data class UpdateEventRequest(
     val date: String? = null,
     val startTime: String? = null,
     val endTime: String? = null,
-    val location: String? = null
+    val location: String? = null,
+    val imageUrl: String? = null,
+    val updateType: String? = null // SINGLE or ALL
 )
 
 @Serializable
@@ -380,3 +394,9 @@ data class UpdateProfileRequest(
     val subDistrictId: String? = null,
     val imageUrl: String? = null
 )
+
+@Serializable
+data class ImageUploadData(
+    val imageUrl: String
+)
+

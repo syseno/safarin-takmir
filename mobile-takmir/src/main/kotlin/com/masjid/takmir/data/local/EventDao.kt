@@ -32,4 +32,8 @@ interface EventDao {
 
     @Query("DELETE FROM events WHERE masjidId = :masjidId")
     suspend fun deleteAllByMasjidId(masjidId: String)
+
+    @Query("DELETE FROM events WHERE groupId = :groupId")
+    suspend fun deleteByGroupId(groupId: String)
 }
+

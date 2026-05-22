@@ -9,6 +9,10 @@ import io.ktor.client.request.patch
 import io.ktor.client.request.post
 import io.ktor.client.request.put
 import io.ktor.client.request.setBody
+import io.ktor.client.request.forms.MultiPartFormDataContent
+import io.ktor.client.request.forms.formData
+import io.ktor.http.Headers
+import io.ktor.http.HttpHeaders
 
 /**
  * API client for Takmir (admin) endpoints.
@@ -91,9 +95,31 @@ class TakmirApiClient(private val client: HttpClient) {
         return result.data ?: throw Exception(result.message)
     }
 
-    /** DELETE /api/takmir/:masjidId/event/:id */
-    suspend fun deleteEvent(masjidId: String, eventId: String) {
-        client.delete("/api/takmir/$masjidId/event/$eventId")
+    /** DELETE /api/takmir/:masjidId/event/:id?deleteType= */
+    suspend fun deleteEvent(masjidId: String, eventId: String, deleteType: String = "SINGLE") {
+        client.delete("/api/takmir/$masjidId/event/$eventId") {
+            url { parameters.append("deleteType", deleteType) }
+        }
+    }
+
+    /** POST /api/takmir/:masjidId/event/upload */
+    suspend fun uploadEventPoster(masjidId: String, imageBytes: ByteArray, filename: String): String {
+        val response = client.post("/api/takmir/$masjidId/event/upload") {
+            setBody(
+                MultiPartFormDataContent(
+                    formData {
+                        append("image", imageBytes, Headers.build {
+                            append(HttpHeaders.ContentType, "image/jpeg")
+                            append(HttpHeaders.ContentDisposition, "filename=\"$filename\"")
+                        })
+                    }
+                )
+            )
+            // Clear default content type to let Ktor configure multipart boundary
+            headers.remove(HttpHeaders.ContentType)
+        }
+        val result: ApiResponse<ImageUploadData> = response.body()
+        return result.data?.imageUrl ?: throw Exception(result.message)
     }
 
     // ── Profile ────────────────────────────────────────────────────────

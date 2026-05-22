@@ -30,7 +30,7 @@ class EventViewModel @Inject constructor(
     fun handleIntent(intent: EventIntent) {
         when (intent) {
             is EventIntent.LoadEvents -> fetchEvents()
-            is EventIntent.DeleteEvent -> deleteEvent(intent.eventId)
+            is EventIntent.DeleteEvent -> deleteEvent(intent.eventId, intent.deleteType)
             is EventIntent.Refresh -> fetchEvents()
         }
     }
@@ -53,10 +53,10 @@ class EventViewModel @Inject constructor(
         }
     }
 
-    private fun deleteEvent(eventId: String) {
+    private fun deleteEvent(eventId: String, deleteType: String) {
         viewModelScope.launch {
             val masjidId = tokenManager.getMasjidId() ?: return@launch
-            when (val result = deleteEventUseCase(masjidId, eventId)) {
+            when (val result = deleteEventUseCase(masjidId, eventId, deleteType)) {
                 is AppResult.Success -> {
                     fetchEvents() // Refresh list
                 }

@@ -1,16 +1,22 @@
 package com.masjid.takmir.feature.donation
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.masjid.takmir.ui.theme.IslamicGreen
+import com.masjid.takmir.ui.theme.IslamicGreenDark
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -32,20 +38,29 @@ fun DonationFormScreen(
     }
 
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
-                title = { Text("Catat Donasi") },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = IslamicGreenDark,
+                    titleContentColor = Color.White,
+                    navigationIconContentColor = Color.White
+                ),
+                title = { Text("Catat Donasi Baru", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBack, "Kembali")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 }
             )
         }
     ) { padding ->
         Column(
-            modifier = Modifier.padding(padding).padding(16.dp).fillMaxSize(),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            modifier = Modifier
+                .padding(padding)
+                .padding(24.dp)
+                .fillMaxSize(),
+            verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
             // Type Dropdown
             ExposedDropdownMenuBox(
@@ -58,7 +73,10 @@ fun DonationFormScreen(
                     readOnly = true,
                     label = { Text("Jenis Donasi") },
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = typeExpanded) },
-                    modifier = Modifier.fillMaxWidth().menuAnchor()
+                    leadingIcon = { Icon(Icons.Default.Category, contentDescription = null, tint = IslamicGreen) },
+                    modifier = Modifier.fillMaxWidth().menuAnchor(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = IslamicGreen, focusedLabelColor = IslamicGreen)
                 )
                 ExposedDropdownMenu(expanded = typeExpanded, onDismissRequest = { typeExpanded = false }) {
                     donationTypes.forEach { t ->
@@ -74,22 +92,29 @@ fun DonationFormScreen(
                 value = amount,
                 onValueChange = { amount = it },
                 label = { Text("Jumlah (Rp)") },
+                leadingIcon = { Icon(Icons.Default.Payments, contentDescription = null, tint = IslamicGreen) },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = IslamicGreen, focusedLabelColor = IslamicGreen)
             )
 
             OutlinedTextField(
                 value = description,
                 onValueChange = { description = it },
                 label = { Text("Keterangan") },
+                leadingIcon = { Icon(Icons.Default.Description, contentDescription = null, tint = IslamicGreen) },
                 modifier = Modifier.fillMaxWidth(),
-                minLines = 2
+                minLines = 3,
+                shape = RoundedCornerShape(12.dp),
+                colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = IslamicGreen, focusedLabelColor = IslamicGreen)
             )
 
             if (state is DonationFormState.Error) {
                 Text(
                     (state as DonationFormState.Error).message,
-                    color = MaterialTheme.colorScheme.error
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall
                 )
             }
 
@@ -103,17 +128,19 @@ fun DonationFormScreen(
                         description = description
                     )
                 },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().height(56.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = IslamicGreen),
                 enabled = state !is DonationFormState.Submitting
             ) {
                 if (state is DonationFormState.Submitting) {
                     CircularProgressIndicator(
-                        modifier = Modifier.size(18.dp),
+                        modifier = Modifier.size(24.dp),
                         strokeWidth = 2.dp,
-                        color = MaterialTheme.colorScheme.onPrimary
+                        color = Color.White
                     )
                 } else {
-                    Text("Simpan Donasi")
+                    Text("Simpan Donasi", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                 }
             }
         }

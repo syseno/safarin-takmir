@@ -6,8 +6,11 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.lifecycleScope
+import com.masjid.takmir.data.local.SettingsManager
 import com.masjid.takmir.navigation.TakmirNavGraph
 import com.masjid.takmir.security.EncryptedTokenManager
 import com.masjid.takmir.ui.theme.TakmirTheme
@@ -22,6 +25,9 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var tokenManager: EncryptedTokenManager
 
+    @Inject
+    lateinit var settingsManager: SettingsManager
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
@@ -29,7 +35,9 @@ class MainActivity : ComponentActivity() {
             val isLoggedIn = tokenManager.getToken() != null
             
             setContent {
-                TakmirTheme {
+                val themeMode by settingsManager.themeMode.collectAsState(initial = 0)
+
+                TakmirTheme(themeMode = themeMode) {
                     Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
                         val navController = rememberNavController()
                         TakmirNavGraph(

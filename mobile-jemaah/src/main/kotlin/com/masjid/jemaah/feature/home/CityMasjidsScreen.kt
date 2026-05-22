@@ -6,10 +6,13 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
+import androidx.compose.material3.pulltorefresh.PullToRefreshContainer
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -24,6 +27,19 @@ fun CityMasjidsScreen(
     viewModel: CityMasjidsViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
+    val pullToRefreshState = rememberPullToRefreshState()
+
+    if (pullToRefreshState.isRefreshing) {
+        LaunchedEffect(Unit) {
+            viewModel.loadCityMasjids()
+        }
+    }
+
+    LaunchedEffect(state.isLoading) {
+        if (!state.isLoading) {
+            pullToRefreshState.endRefresh()
+        }
+    }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -61,10 +77,11 @@ fun CityMasjidsScreen(
             modifier = Modifier
                 .padding(padding)
                 .fillMaxSize()
+                .nestedScroll(pullToRefreshState.nestedScrollConnection)
         ) {
-            if (state.isLoading) {
+            if (state.isLoading && state.masjids.isEmpty() && !pullToRefreshState.isRefreshing) {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center), color = MaterialTheme.colorScheme.primary)
-            } else if (state.error != null) {
+            } else if (state.error != null && state.masjids.isEmpty()) {
                 Column(
                     modifier = Modifier
                         .align(Alignment.Center)
@@ -84,7 +101,7 @@ fun CityMasjidsScreen(
                         Text("Coba Lagi")
                     }
                 }
-            } else if (state.masjids.isEmpty()) {
+            } else if (state.masjids.isEmpty() && !state.isLoading) {
                 Text(
                     text = "Tidak ada masjid ditemukan di area ini.",
                     style = MaterialTheme.typography.bodyMedium,
@@ -105,6 +122,13 @@ fun CityMasjidsScreen(
                     }
                 }
             }
+
+            PullToRefreshContainer(
+                state = pullToRefreshState,
+                modifier = Modifier.align(Alignment.TopCenter),
+                containerColor = MaterialTheme.colorScheme.surface,
+                contentColor = MaterialTheme.colorScheme.primary
+            )
         }
     }
 }

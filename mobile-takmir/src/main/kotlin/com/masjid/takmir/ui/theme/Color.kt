@@ -2,26 +2,27 @@ package com.masjid.takmir.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// ── Takmir Brand Colors (Green/Teal) ──
-val TakmirGreen = Color(0xFF00897B)
-val TakmirGreenDark = Color(0xFF00695C)
-val TakmirGreenLight = Color(0xFF4DB6AC)
-val TakmirTeal = Color(0xFF26A69A)
+// ── Islamic Theme Colors (Brand) ──
+val IslamicGreen = Color(0xFF10B981)
+val IslamicGreenDark = Color(0xFF064E3B)
+val IslamicGreenLight = Color(0xFFD1FAE5)
+val IslamicGold = Color(0xFFD4AF37)
 
-// ── Surface & Background ──
-val SurfaceDark = Color(0xFF121212)
-val SurfaceVariantDark = Color(0xFF1E1E1E)
-val BackgroundDark = Color(0xFF0D0D0D)
+// ── Light Mode Palette ──
+val OffWhite = Color(0xFFF8FAFC)
+val SurfaceLight = Color(0xFFFFFFFF)
+val OnSurfaceLight = Color(0xFF1C1B1F)
+val SurfaceVariantLight = Color(0xFFF1F5F9)
+val OnSurfaceVariantLight = Color(0xFF64748B)
 
-val SurfaceLight = Color(0xFFFFFBFE)
-val SurfaceVariantLight = Color(0xFFF5F5F5)
-val BackgroundLight = Color(0xFFFFFBFE)
+// ── Dark Mode Palette ──
+val BackgroundDark = Color(0xFF0F172A)
+val SurfaceDark = Color(0xFF1E293B)
+val OnSurfaceDark = Color(0xFFF1F5F9)
+val SurfaceVariantDark = Color(0xFF334155)
+val OnSurfaceVariantDark = Color(0xFF94A3B8)
 
 // ── Semantic Colors ──
-val IncomeGreen = Color(0xFF43A047)
-val ExpenseRed = Color(0xFFE53935)
-val WarningOrange = Color(0xFFFFA726)
-
-// ── Text ──
-val OnSurfaceDark = Color(0xFFE0E0E0)
-val OnSurfaceLight = Color(0xFF1C1B1F)
+val IncomeGreen = Color(0xFF22C55E)
+val ExpenseRed = Color(0xFFEF4444)
+val WarningOrange = Color(0xFFF59E0B)

@@ -10,8 +10,8 @@ sealed class TransactionIntent : BaseIntent {
     object Refresh : TransactionIntent()
 }
 
-sealed class TransactionState : BaseState {
-    object Loading : TransactionState()
-    data class Success(val transactions: List<Finance>) : TransactionState()
-    data class Error(val message: String) : TransactionState()
-}
+data class TransactionState(
+    val transactions: List<Finance> = emptyList(),
+    val isLoading: Boolean = false,
+    val error: String? = null
+) : BaseState

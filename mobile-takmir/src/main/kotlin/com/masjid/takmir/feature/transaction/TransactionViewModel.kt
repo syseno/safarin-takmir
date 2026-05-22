@@ -10,6 +10,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -20,7 +21,7 @@ class TransactionViewModel @Inject constructor(
     private val tokenManager: EncryptedTokenManager
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow<TransactionState>(TransactionState.Loading)
+    private val _state = MutableStateFlow(TransactionState())
     val state: StateFlow<TransactionState> = _state.asStateFlow()
 
     init {
@@ -37,17 +38,17 @@ class TransactionViewModel @Inject constructor(
 
     private fun fetchTransactions() {
         viewModelScope.launch {
-            _state.value = TransactionState.Loading
+            _state.update { it.copy(isLoading = true, error = null) }
             val masjidId = tokenManager.getMasjidId() ?: run {
-                _state.value = TransactionState.Error("Masjid ID tidak ditemukan")
+                _state.update { it.copy(isLoading = false, error = "Masjid ID tidak ditemukan") }
                 return@launch
             }
             when (val result = getFinancesUseCase(masjidId)) {
                 is AppResult.Success -> {
-                    _state.value = TransactionState.Success(result.data)
+                    _state.update { it.copy(isLoading = false, transactions = result.data) }
                 }
                 is AppResult.Error -> {
-                    _state.value = TransactionState.Error(result.message)
+                    _state.update { it.copy(isLoading = false, error = result.message) }
                 }
             }
         }
@@ -56,15 +57,12 @@ class TransactionViewModel @Inject constructor(
     private fun deleteTransaction(financeId: String) {
         viewModelScope.launch {
             val masjidId = tokenManager.getMasjidId() ?: return@launch
-            // Optimistic update could be implemented here
             when (val result = deleteFinanceUseCase(masjidId, financeId)) {
                 is AppResult.Success -> {
-                    fetchTransactions() // Refresh list
+                    fetchTransactions()
                 }
                 is AppResult.Error -> {
-                    // Handle error, maybe show a snackbar (requires effect channel)
-                    // For now, just refresh to ensure state is consistent
-                    fetchTransactions()
+                    _state.update { it.copy(error = result.message) }
                 }
             }
         }

@@ -6,7 +6,7 @@ import com.masjid.core.mvi.BaseState
 
 sealed class EventIntent : BaseIntent {
     data class LoadEvents(val masjidId: String) : EventIntent()
-    data class DeleteEvent(val eventId: String) : EventIntent()
+    data class DeleteEvent(val eventId: String, val deleteType: String = "SINGLE") : EventIntent()
     object Refresh : EventIntent()
 }
 

@@ -8,6 +8,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -16,7 +17,7 @@ class EventViewModel @Inject constructor(
     private val getEventsUseCase: GetEventsUseCase
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow<EventState>(EventState.Loading)
+    private val _state = MutableStateFlow(EventState())
     val state: StateFlow<EventState> = _state.asStateFlow()
 
     fun handleIntent(intent: EventIntent) {
@@ -27,13 +28,13 @@ class EventViewModel @Inject constructor(
 
     private fun loadEvents(masjidId: String) {
         viewModelScope.launch {
-            _state.value = EventState.Loading
+            _state.update { it.copy(isLoading = true, error = null) }
             when (val result = getEventsUseCase(masjidId)) {
                 is AppResult.Success -> {
-                    _state.value = EventState.Success(result.data)
+                    _state.update { it.copy(isLoading = false, events = result.data) }
                 }
                 is AppResult.Error -> {
-                    _state.value = EventState.Error(result.message)
+                    _state.update { it.copy(isLoading = false, error = result.message) }
                 }
             }
         }

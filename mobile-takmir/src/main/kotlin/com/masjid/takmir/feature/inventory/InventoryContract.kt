@@ -13,6 +13,6 @@ sealed class InventoryIntent : BaseIntent {
 
 sealed class InventoryState : BaseState {
     object Loading : InventoryState()
-    data class Success(val items: List<InventoryItem>) : InventoryState()
+    data class Success(val inventoryList: List<InventoryItem>) : InventoryState()
     data class Error(val message: String) : InventoryState()
 }

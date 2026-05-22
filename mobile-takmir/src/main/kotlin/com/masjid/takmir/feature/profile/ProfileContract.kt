@@ -8,12 +8,14 @@ import com.masjid.core.mvi.BaseState
 sealed class ProfileIntent : BaseIntent {
     object LoadProfile : ProfileIntent()
     data class UpdateProfile(val request: UpdateProfileRequest) : ProfileIntent()
+    data class SelectTheme(val mode: Int) : ProfileIntent()
     object Logout : ProfileIntent()
 }
 
-sealed class ProfileState : BaseState {
-    object Loading : ProfileState()
-    data class Success(val profile: Masjid) : ProfileState()
-    data class Error(val message: String) : ProfileState()
-    object LoggedOut : ProfileState()
-}
+data class ProfileState(
+    val profile: Masjid? = null,
+    val themeMode: Int = 0,
+    val isLoading: Boolean = false,
+    val isLoggedOut: Boolean = false,
+    val error: String? = null
+) : BaseState

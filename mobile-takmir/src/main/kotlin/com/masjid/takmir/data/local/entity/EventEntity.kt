@@ -13,5 +13,13 @@ data class EventEntity(
     val startTime: String,
     val endTime: String,
     val location: String?,
-    val masjidId: String
+    val masjidId: String,
+    val imageUrl: String? = null,
+    val groupId: String? = null,
+    val isException: Boolean = false,
+    val recurrenceType: String? = null,
+    val recurrenceInterval: Int = 1,
+    val recurrenceDays: String? = null,
+    val recurrenceEnd: String? = null
 )
+

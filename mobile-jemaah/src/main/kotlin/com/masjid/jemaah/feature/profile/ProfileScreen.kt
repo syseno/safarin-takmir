@@ -14,12 +14,15 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import androidx.compose.material3.pulltorefresh.PullToRefreshContainer
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -41,6 +44,19 @@ fun ProfileScreen(
     var showDialog by remember { mutableStateOf(false) }
     var showThemeDialog by remember { mutableStateOf(false) }
     var showLogoutConfirm by remember { mutableStateOf(false) }
+    val pullToRefreshState = rememberPullToRefreshState()
+
+    if (pullToRefreshState.isRefreshing) {
+        LaunchedEffect(Unit) {
+            viewModel.handleIntent(ProfileIntent.LoadProfile)
+        }
+    }
+
+    LaunchedEffect(state.isLoading) {
+        if (!state.isLoading) {
+            pullToRefreshState.endRefresh()
+        }
+    }
 
     LaunchedEffect(state.isLoggedOut) {
         if (state.isLoggedOut) {
@@ -70,6 +86,7 @@ fun ProfileScreen(
             modifier = Modifier
                 .padding(padding)
                 .fillMaxSize()
+                .nestedScroll(pullToRefreshState.nestedScrollConnection)
         ) {
             Column(
                 modifier = Modifier
@@ -227,6 +244,13 @@ fun ProfileScreen(
                     }
                 }
             }
+
+            PullToRefreshContainer(
+                state = pullToRefreshState,
+                modifier = Modifier.align(Alignment.TopCenter),
+                containerColor = MaterialTheme.colorScheme.surface,
+                contentColor = MaterialTheme.colorScheme.primary
+            )
         }
     }
 

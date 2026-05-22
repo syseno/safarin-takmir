@@ -14,8 +14,9 @@ import com.masjid.takmir.data.local.entity.TransactionEntity
         DonationEntity::class,
         InventoryEntity::class
     ],
-    version = 2,        // bumped from 1 → 2 (added donation + inventory tables)
+    version = 3,        // bumped from 2 → 3 (added recurrence + poster fields to EventEntity)
     exportSchema = false
+
 )
 abstract class TakmirDatabase : RoomDatabase() {
     abstract fun transactionDao(): TransactionDao

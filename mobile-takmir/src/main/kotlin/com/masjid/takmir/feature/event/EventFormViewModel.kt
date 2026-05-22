@@ -71,7 +71,15 @@ class EventFormViewModel @Inject constructor(
         date: String,
         startTime: String,
         endTime: String,
-        location: String
+        location: String,
+        imageBytes: ByteArray?,
+        imageFilename: String?,
+        currentImageUrl: String?,
+        recurrenceType: String?,
+        recurrenceInterval: Int,
+        recurrenceDays: String?,
+        recurrenceEnd: String?,
+        updateType: String?
     ) {
         viewModelScope.launch {
             _state.value = EventFormState.Saving
@@ -80,12 +88,54 @@ class EventFormViewModel @Inject constructor(
                 return@launch
             }
 
+            var finalImageUrl = currentImageUrl
+
+            if (imageBytes != null && imageFilename != null) {
+                when (val uploadResult = eventRepository.uploadEventPoster(masjidId, imageBytes, imageFilename)) {
+                    is AppResult.Success -> {
+                        finalImageUrl = uploadResult.data
+                    }
+                    is AppResult.Error -> {
+                        _state.value = EventFormState.Error("Gagal mengunggah gambar: ${uploadResult.message}")
+                        return@launch
+                    }
+                }
+            }
+
             val loc = location.ifBlank { null }
 
             val result = if (eventId == null) {
-                createEventUseCase(masjidId, CreateEventRequest(title, description, date, startTime, endTime, loc))
+                createEventUseCase(
+                    masjidId,
+                    CreateEventRequest(
+                        title = title,
+                        description = description,
+                        date = date,
+                        startTime = startTime,
+                        endTime = endTime,
+                        location = loc,
+                        imageUrl = finalImageUrl,
+                        recurrenceType = recurrenceType,
+                        recurrenceInterval = recurrenceInterval,
+                        recurrenceDays = recurrenceDays,
+                        recurrenceEnd = recurrenceEnd
+                    )
+                )
             } else {
-                updateEventUseCase(masjidId, eventId, UpdateEventRequest(title, description, date, startTime, endTime, loc))
+                updateEventUseCase(
+                    masjidId,
+                    eventId,
+                    UpdateEventRequest(
+                        title = title,
+                        description = description,
+                        date = date,
+                        startTime = startTime,
+                        endTime = endTime,
+                        location = loc,
+                        imageUrl = finalImageUrl,
+                        updateType = updateType
+                    )
+                )
             }
 
             when (result) {
@@ -94,4 +144,5 @@ class EventFormViewModel @Inject constructor(
             }
         }
     }
+
 }

@@ -8,8 +8,8 @@ sealed class EventIntent : BaseIntent {
     data class LoadEvents(val masjidId: String) : EventIntent()
 }
 
-sealed class EventState : BaseState {
-    object Loading : EventState()
-    data class Success(val events: List<MasjidEvent>) : EventState()
-    data class Error(val message: String) : EventState()
-}
+data class EventState(
+    val events: List<MasjidEvent> = emptyList(),
+    val isLoading: Boolean = false,
+    val error: String? = null
+) : BaseState

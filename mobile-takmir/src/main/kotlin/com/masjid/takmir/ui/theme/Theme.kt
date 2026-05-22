@@ -8,36 +8,48 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
 private val DarkColorScheme = darkColorScheme(
-    primary = TakmirGreen,
+    primary = IslamicGreen,
     onPrimary = Color.White,
-    primaryContainer = TakmirGreenDark,
-    secondary = TakmirTeal,
+    primaryContainer = IslamicGreenDark,
+    onPrimaryContainer = Color.White,
+    secondary = IslamicGold,
+    onSecondary = Color.Black,
     background = BackgroundDark,
-    surface = SurfaceDark,
-    surfaceVariant = SurfaceVariantDark,
-    onSurface = OnSurfaceDark,
     onBackground = OnSurfaceDark,
+    surface = SurfaceDark,
+    onSurface = OnSurfaceDark,
+    surfaceVariant = SurfaceVariantDark,
+    onSurfaceVariant = OnSurfaceVariantDark,
     error = ExpenseRed,
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = TakmirGreen,
+    primary = IslamicGreen,
     onPrimary = Color.White,
-    primaryContainer = TakmirGreenLight,
-    secondary = TakmirTeal,
-    background = BackgroundLight,
-    surface = SurfaceLight,
-    surfaceVariant = SurfaceVariantLight,
-    onSurface = OnSurfaceLight,
+    primaryContainer = IslamicGreenLight,
+    onPrimaryContainer = IslamicGreenDark,
+    secondary = IslamicGold,
+    onSecondary = Color.White,
+    background = OffWhite,
     onBackground = OnSurfaceLight,
+    surface = SurfaceLight,
+    onSurface = OnSurfaceLight,
+    surfaceVariant = SurfaceVariantLight,
+    onSurfaceVariant = OnSurfaceVariantLight,
     error = ExpenseRed,
 )
 
 @Composable
 fun TakmirTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
+    themeMode: Int = 0, // 0: System, 1: Light, 2: Dark
     content: @Composable () -> Unit
 ) {
+    val darkTheme = when (themeMode) {
+        1 -> false
+        2 -> true
+        else -> isSystemInDarkTheme()
+    }
+
     val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
 
     MaterialTheme(

@@ -18,6 +18,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import androidx.compose.material3.pulltorefresh.PullToRefreshContainer
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -25,6 +27,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -36,6 +39,7 @@ import com.masjid.core.domain.DailyAdzanSchedule
 import com.masjid.jemaah.ui.theme.IslamicGold
 import com.masjid.jemaah.ui.theme.IslamicGreen
 import com.masjid.jemaah.ui.theme.IslamicGreenDark
+import com.masjid.jemaah.ui.theme.OffWhite
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
@@ -65,6 +69,20 @@ fun HomeScreen(
                 android.Manifest.permission.ACCESS_COARSE_LOCATION
             )
         )
+        viewModel.refreshWithLocation()
+    }
+
+    val pullToRefreshState = rememberPullToRefreshState()
+    if (pullToRefreshState.isRefreshing) {
+        LaunchedEffect(Unit) {
+            viewModel.refreshWithLocation()
+        }
+    }
+    
+    LaunchedEffect(state.isLoading) {
+        if (!state.isLoading) {
+            pullToRefreshState.endRefresh()
+        }
     }
 
     Scaffold(
@@ -108,104 +126,116 @@ fun HomeScreen(
             )
         }
     ) { padding ->
-        LazyColumn(
+        Box(
             modifier = Modifier
                 .padding(padding)
-                .fillMaxSize(),
-            contentPadding = PaddingValues(bottom = 24.dp)
+                .fillMaxSize()
+                .nestedScroll(pullToRefreshState.nestedScrollConnection)
         ) {
-            // Header Decoration
-            item {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(80.dp)
-                        .background(
-                            Brush.verticalGradient(
-                                colors = listOf(IslamicGreenDark, Color.Transparent)
-                            )
-                        )
-                )
-            }
-
-            // Adzan Feature Section
-            item {
-                if (state.adzanSchedules.isNotEmpty()) {
-                    Box(modifier = Modifier.offset(y = (-80).dp)) {
-                        AdzanScheduleSection(state.adzanSchedules, countdown)
-                    }
-                } else if (!state.isLoading) {
-                    // Empty state for Adzan
-                    LocationAccessCard(locationPermissionLauncher)
-                }
-            }
-
-            // Results Section Header
-            item {
-                Spacer(modifier = Modifier.height(if (state.adzanSchedules.isNotEmpty()) 0.dp else 16.dp))
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 20.dp, end = 20.dp, top = 0.dp, bottom = 8.dp)
-                        .offset(y = if (state.adzanSchedules.isNotEmpty()) (-60).dp else 0.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "Masjid Terdekat",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = if (isSystemInDarkTheme()) MaterialTheme.colorScheme.primary else IslamicGreenDark
-                    )
-                    state.cityId?.let { cityId ->
-                        TextButton(
-                            onClick = { onNavigateToCityMasjids(cityId) },
-                            colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.primary)
-                        ) {
-                            Text(
-                                text = "Lihat Semua",
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                    }
-                }
-            }
-
-            if (state.isLoading) {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(bottom = 24.dp)
+            ) {
+                // Header Decoration
                 item {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(32.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
-                    }
+                            .height(80.dp)
+                            .background(
+                                Brush.verticalGradient(
+                                    colors = listOf(IslamicGreenDark, Color.Transparent)
+                                )
+                            )
+                    )
                 }
-            } else if (state.error != null) {
+
+                // Adzan Feature Section
                 item {
-                    ErrorMessage(state.error!!)
-                }
-            } else {
-                if (state.nearestMasjids.isEmpty()) {
-                    item {
-                        EmptyMasjidsMessage()
+                    if (state.adzanSchedules.isNotEmpty()) {
+                        Box(modifier = Modifier.offset(y = (-80).dp)) {
+                            AdzanScheduleSection(state.adzanSchedules, countdown)
+                        }
+                    } else if (!state.isLoading) {
+                        // Empty state for Adzan
+                        LocationAccessCard(locationPermissionLauncher)
                     }
-                } else {
-                    items(state.nearestMasjids) { masjid ->
+                }
+
+                // Results Section Header
+                item {
+                    Spacer(modifier = Modifier.height(if (state.adzanSchedules.isNotEmpty()) 0.dp else 16.dp))
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 20.dp, end = 20.dp, top = 0.dp, bottom = 8.dp)
+                            .offset(y = if (state.adzanSchedules.isNotEmpty()) (-60).dp else 0.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Masjid Terdekat",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = if (isSystemInDarkTheme()) MaterialTheme.colorScheme.primary else IslamicGreenDark
+                        )
+                        state.cityId?.let { cityId ->
+                            TextButton(
+                                onClick = { onNavigateToCityMasjids(cityId) },
+                                colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.primary)
+                            ) {
+                                Text(
+                                    text = "Lihat Semua",
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+                    }
+                }
+
+                if (state.isLoading && state.nearestMasjids.isEmpty() && !pullToRefreshState.isRefreshing) {
+                    item {
                         Box(
                             modifier = Modifier
-                                .padding(horizontal = 20.dp, vertical = 6.dp)
-                                .offset(y = if (state.adzanSchedules.isNotEmpty()) (-60).dp else 0.dp)
+                                .fillMaxWidth()
+                                .padding(32.dp),
+                            contentAlignment = Alignment.Center
                         ) {
-                            NearestMasjidCard(
-                                masjid = masjid,
-                                onClick = { onNavigateToDetail(masjid.id) }
-                            )
+                            CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                        }
+                    }
+                } else if (state.error != null && state.nearestMasjids.isEmpty()) {
+                    item {
+                        ErrorMessage(state.error!!)
+                    }
+                } else {
+                    if (state.nearestMasjids.isEmpty() && !state.isLoading) {
+                        item {
+                            EmptyMasjidsMessage()
+                        }
+                    } else {
+                        items(state.nearestMasjids) { masjid ->
+                            Box(
+                                modifier = Modifier
+                                    .padding(horizontal = 20.dp, vertical = 6.dp)
+                                    .offset(y = if (state.adzanSchedules.isNotEmpty()) (-60).dp else 0.dp)
+                            ) {
+                                NearestMasjidCard(
+                                    masjid = masjid,
+                                    onClick = { onNavigateToDetail(masjid.id) }
+                                )
+                            }
                         }
                     }
                 }
             }
+
+            PullToRefreshContainer(
+                state = pullToRefreshState,
+                modifier = Modifier.align(Alignment.TopCenter),
+                containerColor = MaterialTheme.colorScheme.surface,
+                contentColor = MaterialTheme.colorScheme.primary
+            )
         }
     }
 }

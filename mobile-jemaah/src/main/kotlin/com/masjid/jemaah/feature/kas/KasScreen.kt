@@ -10,11 +10,14 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import androidx.compose.material3.pulltorefresh.PullToRefreshContainer
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -35,8 +38,21 @@ fun KasScreen(
 ) {
     val state by viewModel.state.collectAsState()
     val formatter = NumberFormat.getCurrencyInstance(Locale("id", "ID"))
+    val pullToRefreshState = rememberPullToRefreshState()
 
-    LaunchedEffect(masjidId) {
+    if (pullToRefreshState.isRefreshing) {
+        LaunchedEffect(Unit) {
+            viewModel.handleIntent(KasIntent.LoadKas(masjidId))
+        }
+    }
+
+    LaunchedEffect(state.isLoading) {
+        if (!state.isLoading) {
+            pullToRefreshState.endRefresh()
+        }
+    }
+
+    LaunchedEffect(Unit) {
         viewModel.handleIntent(KasIntent.LoadKas(masjidId))
     }
 
@@ -58,154 +74,159 @@ fun KasScreen(
             )
         }
     ) { padding ->
-        Box(modifier = Modifier.padding(padding).fillMaxSize()) {
-            when (val s = state) {
-                is KasState.Loading -> {
-                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center), color = MaterialTheme.colorScheme.primary)
-                }
-                is KasState.Error -> {
-                    Column(
-                        modifier = Modifier.align(Alignment.Center).padding(16.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
+        Box(
+            modifier = Modifier
+                .padding(padding)
+                .fillMaxSize()
+                .nestedScroll(pullToRefreshState.nestedScrollConnection)
+        ) {
+            if (state.isLoading && state.transactions.isEmpty() && !pullToRefreshState.isRefreshing) {
+                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center), color = MaterialTheme.colorScheme.primary)
+            } else if (state.error != null && state.transactions.isEmpty()) {
+                Column(
+                    modifier = Modifier.align(Alignment.Center).padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(text = "Error: ${state.error}", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium)
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Button(
+                        onClick = { viewModel.handleIntent(KasIntent.LoadKas(masjidId)) },
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                     ) {
-                        Text(text = "Error: ${s.message}", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium)
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Button(
-                            onClick = { viewModel.handleIntent(KasIntent.LoadKas(masjidId)) },
-                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
-                        ) {
-                            Text("Coba Lagi")
-                        }
+                        Text("Coba Lagi")
                     }
                 }
-                is KasState.Success -> {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(bottom = 24.dp)
-                    ) {
-                        // ── Header Gradient Decoration ────────────────────────
-                        item {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(100.dp)
-                                    .background(
-                                        Brush.verticalGradient(
-                                            colors = listOf(IslamicGreenDark, Color.Transparent)
-                                        )
+            } else {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(bottom = 24.dp)
+                ) {
+                    // ── Header Gradient Decoration ────────────────────────
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(100.dp)
+                                .background(
+                                    Brush.verticalGradient(
+                                        colors = listOf(IslamicGreenDark, Color.Transparent)
                                     )
-                            )
-                        }
+                                )
+                        )
+                    }
 
-                        // ── Summary Card ──────────────────────────────────────
-                        item {
-                            Card(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 20.dp)
-                                    .offset(y = (-80).dp),
-                                shape = RoundedCornerShape(24.dp),
-                                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
-                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-                            ) {
-                                Column(modifier = Modifier.padding(24.dp)) {
-                                    Text(
-                                        "Saldo Saat Ini",
-                                        style = MaterialTheme.typography.labelLarge,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                    Spacer(modifier = Modifier.height(8.dp))
-                                    Text(
-                                        formatter.format(s.summary.balance),
-                                        style = MaterialTheme.typography.headlineLarge,
-                                        fontWeight = FontWeight.ExtraBold,
-                                        color = MaterialTheme.colorScheme.primary
-                                    )
-                                    
-                                    Spacer(modifier = Modifier.height(24.dp))
-                                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-                                    Spacer(modifier = Modifier.height(20.dp))
-                                    
-                                    Row(modifier = Modifier.fillMaxWidth()) {
-                                        Column(modifier = Modifier.weight(1f)) {
-                                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                                Surface(modifier = Modifier.size(8.dp), shape = CircleShape, color = IncomeGreen) {}
-                                                Spacer(modifier = Modifier.width(6.dp))
-                                                Text("Total Masuk", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                            }
-                                            Text(
-                                                formatter.format(s.summary.totalIncome),
-                                                color = IncomeGreen,
-                                                fontWeight = FontWeight.Bold,
-                                                style = MaterialTheme.typography.titleMedium
-                                            )
+                    // ── Summary Card ──────────────────────────────────────
+                    item {
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 20.dp)
+                                .offset(y = (-80).dp),
+                            shape = RoundedCornerShape(24.dp),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                        ) {
+                            Column(modifier = Modifier.padding(24.dp)) {
+                                Text(
+                                    "Saldo Saat Ini",
+                                    style = MaterialTheme.typography.labelLarge,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    formatter.format(state.summary.balance),
+                                    style = MaterialTheme.typography.headlineLarge,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                                
+                                Spacer(modifier = Modifier.height(24.dp))
+                                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                                Spacer(modifier = Modifier.height(20.dp))
+                                
+                                Row(modifier = Modifier.fillMaxWidth()) {
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Surface(modifier = Modifier.size(8.dp), shape = CircleShape, color = IncomeGreen) {}
+                                            Spacer(modifier = Modifier.width(6.dp))
+                                            Text("Total Masuk", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         }
-                                        Column(modifier = Modifier.weight(1f)) {
-                                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                                Surface(modifier = Modifier.size(8.dp), shape = CircleShape, color = ExpenseRed) {}
-                                                Spacer(modifier = Modifier.width(6.dp))
-                                                Text("Total Keluar", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                            }
-                                            Text(
-                                                formatter.format(s.summary.totalExpense),
-                                                color = ExpenseRed,
-                                                fontWeight = FontWeight.Bold,
-                                                style = MaterialTheme.typography.titleMedium
-                                            )
+                                        Text(
+                                            formatter.format(state.summary.totalIncome),
+                                            color = IncomeGreen,
+                                            fontWeight = FontWeight.Bold,
+                                            style = MaterialTheme.typography.titleMedium
+                                        )
+                                    }
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Surface(modifier = Modifier.size(8.dp), shape = CircleShape, color = ExpenseRed) {}
+                                            Spacer(modifier = Modifier.width(6.dp))
+                                            Text("Total Keluar", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         }
+                                        Text(
+                                            formatter.format(state.summary.totalExpense),
+                                            color = ExpenseRed,
+                                            fontWeight = FontWeight.Bold,
+                                            style = MaterialTheme.typography.titleMedium
+                                        )
                                     }
                                 }
                             }
                         }
+                    }
 
-                        // ── Transaction List Header ──────────────────────────
+                    // ── Transaction List Header ──────────────────────────
+                    item {
+                        Text(
+                            "Riwayat Transaksi",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier
+                                .padding(horizontal = 20.dp)
+                                .offset(y = (-60).dp)
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
+
+                    if (state.transactions.isEmpty() && !state.isLoading) {
                         item {
-                            Text(
-                                "Riwayat Transaksi",
-                                style = MaterialTheme.typography.titleLarge,
-                                fontWeight = FontWeight.ExtraBold,
-                                color = MaterialTheme.colorScheme.primary,
+                            Column(
                                 modifier = Modifier
-                                    .padding(horizontal = 20.dp)
-                                    .offset(y = (-60).dp)
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
+                                    .fillMaxWidth()
+                                    .padding(48.dp)
+                                    .offset(y = (-60).dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Icon(Icons.AutoMirrored.Filled.ReceiptLong, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f), modifier = Modifier.size(48.dp))
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text("Belum ada data transaksi.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                        }
+                    } else {
+                        items(state.transactions) { tx ->
+                            Box(modifier = Modifier
+                                .padding(horizontal = 20.dp, vertical = 6.dp)
+                                .offset(y = (-60).dp)) {
+                                TransactionItem(tx, formatter)
+                            }
                         }
 
-                        if (s.transactions.isEmpty()) {
+                        // ── Load More ──────────────────────────────────────
+                        if (state.hasMore) {
                             item {
-                                Column(
+                                Box(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .padding(48.dp)
+                                        .padding(top = 16.dp)
                                         .offset(y = (-60).dp),
-                                    horizontalAlignment = Alignment.CenterHorizontally
+                                    contentAlignment = Alignment.Center
                                 ) {
-                                    Icon(Icons.AutoMirrored.Filled.ReceiptLong, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f), modifier = Modifier.size(48.dp))
-                                    Spacer(modifier = Modifier.height(8.dp))
-                                    Text("Belum ada data transaksi.", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                }
-                            }
-                        } else {
-                            items(s.transactions) { tx ->
-                                Box(modifier = Modifier
-                                    .padding(horizontal = 20.dp, vertical = 6.dp)
-                                    .offset(y = (-60).dp)) {
-                                    TransactionItem(tx, formatter)
-                                }
-                            }
-
-                            // ── Load More ──────────────────────────────────────
-                            if (s.hasMore) {
-                                item {
-                                    Box(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(top = 16.dp)
-                                            .offset(y = (-60).dp),
-                                        contentAlignment = Alignment.Center
-                                    ) {
+                                    if (state.isMoreLoading) {
+                                        CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                                    } else {
                                         TextButton(
                                             onClick = { viewModel.handleIntent(KasIntent.LoadMore(masjidId)) },
                                             colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.primary)
@@ -219,6 +240,13 @@ fun KasScreen(
                     }
                 }
             }
+
+            PullToRefreshContainer(
+                state = pullToRefreshState,
+                modifier = Modifier.align(Alignment.TopCenter),
+                containerColor = MaterialTheme.colorScheme.surface,
+                contentColor = MaterialTheme.colorScheme.primary
+            )
         }
     }
 }

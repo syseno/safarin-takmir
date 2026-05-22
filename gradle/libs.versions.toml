@@ -16,6 +16,7 @@ coroutines = "1.7.3"
 playServicesLocation = "21.1.0"
 workManager = "2.9.0"
 chucker = "4.0.0"
+coil = "2.6.0"
 
 
 [libraries]
@@ -60,6 +61,8 @@ play-services-location = { module = "com.google.android.gms:play-services-locati
 work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "workManager" }
 chucker-library = { module = "com.github.chuckerteam.chucker:library", version.ref = "chucker" }
 chucker-library-no-op = { module = "com.github.chuckerteam.chucker:library-no-op", version.ref = "chucker" }
+coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coil" }
+
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

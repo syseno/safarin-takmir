@@ -46,13 +46,28 @@ class EventRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun deleteEvent(masjidId: String, eventId: String): AppResult<Unit> {
+    override suspend fun deleteEvent(masjidId: String, eventId: String, deleteType: String): AppResult<Unit> {
         return AppResult.runCatching {
-            apiClient.deleteEvent(masjidId, eventId)
+            apiClient.deleteEvent(masjidId, eventId, deleteType)
             val entity = eventDao.getById(eventId)
-            entity?.let { eventDao.delete(it) }
+            if (deleteType == "ALL" && entity?.groupId != null) {
+                eventDao.deleteByGroupId(entity.groupId)
+            } else {
+                entity?.let { eventDao.delete(it) }
+            }
         }
     }
+
+    override suspend fun uploadEventPoster(
+        masjidId: String,
+        imageBytes: ByteArray,
+        filename: String
+    ): AppResult<String> {
+        return AppResult.runCatching {
+            apiClient.uploadEventPoster(masjidId, imageBytes, filename)
+        }
+    }
+
 
     private fun MasjidEvent.toEntity(masjidId: String) = EventEntity(
         id = id,
@@ -62,6 +77,14 @@ class EventRepositoryImpl @Inject constructor(
         startTime = startTime,
         endTime = endTime,
         location = location,
-        masjidId = masjidId
+        masjidId = masjidId,
+        imageUrl = imageUrl,
+        groupId = groupId,
+        isException = isException,
+        recurrenceType = recurrenceType,
+        recurrenceInterval = recurrenceInterval,
+        recurrenceDays = recurrenceDays,
+        recurrenceEnd = recurrenceEnd
     )
+
 }
