@@ -92,6 +92,13 @@ dependencies {
 
     // Coroutines
     implementation(libs.kotlinx.coroutines.android)
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
+
+    // Location & WorkManager
+    implementation(libs.play.services.location)
+    implementation(libs.work.runtime.ktx)
+    implementation("androidx.hilt:hilt-work:1.2.0")
+    ksp("androidx.hilt:hilt-compiler:1.2.0")
 
     // Serialization
     implementation(libs.kotlinx.serialization.json)

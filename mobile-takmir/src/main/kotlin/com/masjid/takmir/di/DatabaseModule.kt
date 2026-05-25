@@ -5,6 +5,7 @@ import androidx.room.Room
 import com.masjid.takmir.data.local.DonationDao
 import com.masjid.takmir.data.local.EventDao
 import com.masjid.takmir.data.local.InventoryDao
+import com.masjid.takmir.data.local.PrayerDao
 import com.masjid.takmir.data.local.TakmirDatabase
 import com.masjid.takmir.data.local.TransactionDao
 import dagger.Module
@@ -45,4 +46,8 @@ object DatabaseModule {
     @Provides
     @Singleton
     fun provideInventoryDao(database: TakmirDatabase): InventoryDao = database.inventoryDao()
+
+    @Provides
+    @Singleton
+    fun providePrayerDao(database: TakmirDatabase): PrayerDao = database.prayerDao()
 }

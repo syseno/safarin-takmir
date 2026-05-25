@@ -1,5 +1,6 @@
 package com.masjid.takmir.feature.dashboard
 
+import com.masjid.core.domain.DailyAdzanSchedule
 import com.masjid.core.domain.DonationSummary
 import com.masjid.core.domain.Finance
 import com.masjid.core.domain.MasjidEvent
@@ -21,7 +22,10 @@ sealed class DashboardState : BaseState {
         val upcomingEvents: List<MasjidEvent>,
         val donationSummary: DonationSummary = DonationSummary(),
         val inventoryTotal: Int = 0,
-        val masjidName: String = ""
+        val masjidName: String = "",
+        val adzanSchedules: List<DailyAdzanSchedule> = emptyList(),
+        val currentCity: String? = null,
+        val currentProvince: String? = null
     ) : DashboardState()
     data class Error(val message: String) : DashboardState()
 }

@@ -5,6 +5,7 @@ import androidx.room.RoomDatabase
 import com.masjid.takmir.data.local.entity.DonationEntity
 import com.masjid.takmir.data.local.entity.EventEntity
 import com.masjid.takmir.data.local.entity.InventoryEntity
+import com.masjid.takmir.data.local.entity.PrayerEntity
 import com.masjid.takmir.data.local.entity.TransactionEntity
 
 @Database(
@@ -12,9 +13,10 @@ import com.masjid.takmir.data.local.entity.TransactionEntity
         TransactionEntity::class,
         EventEntity::class,
         DonationEntity::class,
-        InventoryEntity::class
+        InventoryEntity::class,
+        PrayerEntity::class
     ],
-    version = 3,        // bumped from 2 → 3 (added recurrence + poster fields to EventEntity)
+    version = 4,        // bumped to 4 (added prayer_schedules table)
     exportSchema = false
 
 )
@@ -23,4 +25,5 @@ abstract class TakmirDatabase : RoomDatabase() {
     abstract fun eventDao(): EventDao
     abstract fun donationDao(): DonationDao
     abstract fun inventoryDao(): InventoryDao
+    abstract fun prayerDao(): PrayerDao
 }
