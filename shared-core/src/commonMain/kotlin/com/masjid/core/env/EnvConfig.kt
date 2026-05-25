@@ -11,7 +11,7 @@ interface EnvConfig {
 }
 
 data class DevEnvConfig(
-    override val baseUrl: String = "http://192.168.1.3:3000/api",
+    override val baseUrl: String = "http://158.140.166.109:3000/api",
     override val isDebug: Boolean = true,
     override val name: String = "dev"
 ) : EnvConfig
