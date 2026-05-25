@@ -10,8 +10,7 @@ import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logger
 import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.request.header
-import io.ktor.client.plugins.auth.Auth
-import io.ktor.client.plugins.auth.providers.bearer
+import io.ktor.client.request.HttpSendPipeline
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
@@ -30,7 +29,7 @@ object KtorClientFactory {
         tokenManager: TokenManager,
         httpClientEngine: io.ktor.client.engine.HttpClientEngine
     ): HttpClient {
-        return HttpClient(httpClientEngine) {
+        val client = HttpClient(httpClientEngine) {
             install(ContentNegotiation) {
                 json(Json {
                     prettyPrint = env.isDebug
@@ -62,25 +61,20 @@ object KtorClientFactory {
                 }
             }
 
-            install(Auth) {
-                bearer {
-                    loadTokens {
-                        val token = tokenManager.getToken()
-                        if (token != null) {
-                            io.ktor.client.plugins.auth.providers.BearerTokens(token, "")
-                        } else null
-                    }
-                    sendWithoutRequest { request ->
-                        true
-                    }
-                }
-            }
-
             defaultRequest {
                 url(env.baseUrl)
                 header("Accept", "application/json")
                 contentType(ContentType.Application.Json)
             }
         }
+
+        client.sendPipeline.intercept(HttpSendPipeline.State) {
+            val token = tokenManager.getToken()
+            if (!token.isNullOrBlank() && !context.headers.contains("Authorization")) {
+                context.header("Authorization", "Bearer $token")
+            }
+        }
+
+        return client
     }
 }
