@@ -67,8 +67,11 @@ object KtorClientFactory {
                     loadTokens {
                         val token = tokenManager.getToken()
                         if (token != null) {
-                            io.ktor.client.plugins.auth.providers.BearerTokens(token, token)
+                            io.ktor.client.plugins.auth.providers.BearerTokens(token, "")
                         } else null
+                    }
+                    sendWithoutRequest { request ->
+                        true
                     }
                 }
             }

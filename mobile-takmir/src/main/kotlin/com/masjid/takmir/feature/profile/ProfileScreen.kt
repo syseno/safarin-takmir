@@ -37,6 +37,7 @@ fun ProfileScreen(
 ) {
     val state by viewModel.state.collectAsState()
     var showThemeDialog by remember { mutableStateOf(false) }
+    var showMethodDialog by remember { mutableStateOf(false) }
     var showLogoutConfirm by remember { mutableStateOf(false) }
 
     var name by remember { mutableStateOf("") }
@@ -174,40 +175,30 @@ fun ProfileScreen(
                             color = MaterialTheme.colorScheme.primary
                         )
                         
+                        // Theme Selection
                         val themeLabel = when(state.themeMode) {
                             1 -> "Terang"
                             2 -> "Gelap"
                             else -> "Ikuti Sistem"
                         }
                         
-                        Surface(
-                            onClick = { showThemeDialog = true },
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(16.dp),
-                            color = MaterialTheme.colorScheme.surface,
-                            shadowElevation = 2.dp
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(16.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Surface(
-                                    modifier = Modifier.size(40.dp),
-                                    shape = CircleShape,
-                                    color = IslamicGreen.copy(alpha = 0.1f)
-                                ) {
-                                    Box(contentAlignment = Alignment.Center) {
-                                        Icon(Icons.Default.Palette, contentDescription = null, tint = IslamicGreen, modifier = Modifier.size(20.dp))
-                                    }
-                                }
-                                Spacer(modifier = Modifier.width(16.dp))
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text("Tema Aplikasi", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                    Text(themeLabel, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold)
-                                }
-                                Icon(Icons.Default.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f))
-                            }
-                        }
+                        SettingItem(
+                            title = "Tema Aplikasi",
+                            subtitle = themeLabel,
+                            icon = Icons.Default.Palette,
+                            onClick = { showThemeDialog = true }
+                        )
+
+                        // Method Selection
+                        val currentMethod = state.prayerMethods.values.find { it.id == state.selectedMethodId }
+                        val methodName = currentMethod?.name ?: "Kementerian Agama Republik Indonesia"
+                        
+                        SettingItem(
+                            title = "Metode Perhitungan",
+                            subtitle = methodName,
+                            icon = Icons.Default.Calculate,
+                            onClick = { showMethodDialog = true }
+                        )
                     }
 
                     Spacer(modifier = Modifier.height(24.dp))
@@ -296,64 +287,33 @@ fun ProfileScreen(
     }
 
     if (showThemeDialog) {
-        Dialog(onDismissRequest = { showThemeDialog = false }) {
-            Surface(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 24.dp),
-                shape = RoundedCornerShape(28.dp),
-                color = MaterialTheme.colorScheme.surface
-            ) {
-                Column(modifier = Modifier.padding(24.dp)) {
-                    Text(
-                        text = "Pilih Tema Aplikasi",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Column(modifier = Modifier.selectableGroup()) {
-                        val options = listOf(0 to "Ikuti Sistem", 1 to "Terang", 2 to "Gelap")
-                        options.forEach { (mode, label) ->
-                            val isSelected = state.themeMode == mode
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clip(RoundedCornerShape(12.dp))
-                                    .selectable(
-                                        selected = isSelected,
-                                        onClick = { 
-                                            viewModel.handleIntent(ProfileIntent.SelectTheme(mode))
-                                            showThemeDialog = false
-                                        },
-                                        role = Role.RadioButton
-                                    )
-                                    .padding(vertical = 12.dp, horizontal = 8.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                RadioButton(
-                                    selected = isSelected,
-                                    onClick = null,
-                                    colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colorScheme.primary)
-                                )
-                                Spacer(modifier = Modifier.width(12.dp))
-                                Text(
-                                    text = label,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
-                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
-                                )
-                            }
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                        TextButton(onClick = { showThemeDialog = false }) {
-                            Text("Batal")
-                        }
-                    }
-                }
-            }
+        SelectionDialog(
+            title = "Pilih Tema Aplikasi",
+            options = listOf(0 to "Ikuti Sistem", 1 to "Terang", 2 to "Gelap"),
+            selectedId = state.themeMode,
+            onSelect = { mode -> 
+                viewModel.handleIntent(ProfileIntent.SelectTheme(mode))
+                showThemeDialog = false
+            },
+            onDismiss = { showThemeDialog = false }
+        )
+    }
+
+    if (showMethodDialog && state.prayerMethods.isNotEmpty()) {
+        SelectionDialog(
+            title = "Pilih Metode Perhitungan",
+            options = state.prayerMethods.values.sortedBy { it.name }.map { it.id!! to it.name },
+            selectedId = state.selectedMethodId,
+            isLoading = state.isMethodLoading,
+            onSelect = { id -> viewModel.handleIntent(ProfileIntent.SelectPrayerMethod(id)) },
+            onDismiss = { if (!state.isMethodLoading) showMethodDialog = false }
+        )
+    }
+
+    // Auto-close method dialog after loading finishes
+    LaunchedEffect(state.isMethodLoading) {
+        if (!state.isMethodLoading && showMethodDialog) {
+            showMethodDialog = false
         }
     }
 
@@ -379,5 +339,117 @@ fun ProfileScreen(
                 }
             }
         )
+    }
+}
+
+@Composable
+fun SettingItem(
+    title: String,
+    subtitle: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    onClick: () -> Unit
+) {
+    Surface(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        color = MaterialTheme.colorScheme.surface,
+        shadowElevation = 2.dp
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Surface(
+                modifier = Modifier.size(40.dp),
+                shape = CircleShape,
+                color = IslamicGreen.copy(alpha = 0.1f)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(icon, contentDescription = null, tint = IslamicGreen, modifier = Modifier.size(20.dp))
+                }
+            }
+            Spacer(modifier = Modifier.width(16.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(title, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(subtitle, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+            }
+            Icon(Icons.Default.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f))
+        }
+    }
+}
+
+@Composable
+fun SelectionDialog(
+    title: String,
+    options: List<Pair<Int, String>>,
+    selectedId: Int,
+    isLoading: Boolean = false,
+    onSelect: (Int) -> Unit,
+    onDismiss: () -> Unit
+) {
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 24.dp),
+            shape = RoundedCornerShape(28.dp),
+            color = MaterialTheme.colorScheme.surface
+        ) {
+            Box {
+                Column(modifier = Modifier.padding(24.dp)) {
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Column(
+                        modifier = Modifier
+                            .weight(1f, fill = false)
+                            .verticalScroll(rememberScrollState())
+                            .selectableGroup()
+                    ) {
+                        options.forEach { (id, label) ->
+                            val isSelected = id == selectedId
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .selectable(
+                                        selected = isSelected,
+                                        enabled = !isLoading,
+                                        onClick = { onSelect(id) },
+                                        role = Role.RadioButton
+                                    )
+                                    .padding(vertical = 12.dp, horizontal = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                RadioButton(
+                                    selected = isSelected,
+                                    onClick = null,
+                                    enabled = !isLoading,
+                                    colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colorScheme.primary)
+                                )
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Text(
+                                    text = label,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
+                                )
+                            }
+                        }
+                    }
+                }
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.align(Alignment.Center),
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+        }
     }
 }

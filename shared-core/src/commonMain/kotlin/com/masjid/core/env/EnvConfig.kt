@@ -11,7 +11,7 @@ interface EnvConfig {
 }
 
 data class DevEnvConfig(
-    override val baseUrl: String = "http://158.140.166.109:3000/api",
+    override val baseUrl: String = "https://7601-2402-8780-1012-3648-5073-3922-d32c-baed.ngrok-free.app/api",
     override val isDebug: Boolean = true,
     override val name: String = "dev"
 ) : EnvConfig
